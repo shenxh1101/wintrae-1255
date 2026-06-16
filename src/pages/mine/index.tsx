@@ -30,10 +30,10 @@ const MinePage: React.FC = () => {
         Taro.navigateTo({ url: '/pages/leaderboard/index' });
         break;
       case 'report':
-        Taro.navigateTo({ url: '/pages/report/index' });
+        Taro.navigateTo({ url: '/pages/report/index?mode=select' });
         break;
       case 'rating':
-        Taro.navigateTo({ url: '/pages/rating/index' });
+        Taro.navigateTo({ url: '/pages/ranking/index?mode=view' });
         break;
       case 'favorites':
         Taro.showToast({ title: '收藏联系人', icon: 'none' });

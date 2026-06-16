@@ -18,7 +18,6 @@ const DetailPage: React.FC = () => {
     services,
     currentUser,
     addBooking,
-    updateBooking,
     favoriteContacts
   } = useAppStore();
 
@@ -29,46 +28,48 @@ const DetailPage: React.FC = () => {
     console.log('[Detail] Page params:', params);
   }, []);
 
-  const item = useMemo(() => {
+  const itemObj = useMemo(() => {
     if (type === 'item') {
-      return items.find(i => i.id === itemId);
+      return items.find(i => i.id === itemId) || null;
     }
-    return services.find(s => s.id === itemId);
+    return services.find(s => s.id === itemId) || null;
   }, [type, itemId, items, services]);
 
   const images = useMemo(() => {
-    if (!item) return ['https://via.placeholder.com/750x500?text=暂无图片'];
-    if ('images' in item && item.images.length > 0) return item.images;
-    return ['https://via.placeholder.com/750x500?text=暂无图片'];
-  }, [item]);
+    if (!itemObj) return ['https://picsum.photos/id/225/750/500'];
+    if (itemObj.images && itemObj.images.length > 0) return itemObj.images;
+    return ['https://picsum.photos/id/225/750/500'];
+  }, [itemObj]);
 
   useEffect(() => {
-    if (item) {
-      const publisherId = 'publisherId' in item ? item.publisherId : item.requesterId;
-      const isFav = favoriteContacts.some(f => f.contact.id === publisherId);
+    if (itemObj) {
+      const pubId = itemObj.publisherId;
+      const isFav = favoriteContacts.some(f => f.contact.id === pubId);
       setIsFavorited(isFav);
     }
-  }, [item, favoriteContacts]);
+  }, [itemObj, favoriteContacts]);
 
-  if (!item) {
+  if (!itemObj) {
     return (
       <ScrollView className={styles.detailPage}>
         <View style={{ padding: 100, textAlign: 'center' }}>
-          <Text style={{ fontSize: 32, color: '#999' }}>加载中...</Text>
+          <Text style={{ fontSize: 32, color: '#999' }}>内容不存在或已下架</Text>
         </View>
       </ScrollView>
     );
   }
 
-  const publisher = 'publisher' in item ? item.publisher : ('requester' in item ? item.requester : item.volunteer);
-  const publisherId = 'publisherId' in item ? item.publisherId : item.requesterId;
+  const publisher = itemObj.publisher;
+  const publisherId = itemObj.publisherId;
   const isOwner = publisherId === currentUser.id;
 
   const getTypeTag = () => {
     if (type === 'item') {
-      return 'type' in item && item.type === 'need'
-        ? { className: styles.needTag, text: '求购需求' }
-        : { className: styles.exchangeTag, text: '可交换' };
+      const itemType = (itemObj as any).type;
+      if (itemType === 'needed') {
+        return { className: styles.needTag, text: '求购/求借' };
+      }
+      return { className: styles.exchangeTag, text: '可交换' };
     }
     return { className: styles.serviceTag, text: '代办服务' };
   };
@@ -81,7 +82,7 @@ const DetailPage: React.FC = () => {
       return;
     }
 
-    if (!selectedTimeSlot && 'timeSlots' in item) {
+    if (type === 'item' && !selectedTimeSlot) {
       showToast('请选择交换时间段');
       return;
     }
@@ -89,33 +90,34 @@ const DetailPage: React.FC = () => {
     const confirmed = await showModal(
       '确认预约',
       selectedTimeSlot
-        ? `确认预约 ${selectedTimeSlot} 吗？`
-        : '确认预约该服务吗？'
+        ? `确认预约「${itemObj.title}」时间段 ${selectedTimeSlot} 吗？`
+        : `确认预约「${itemObj.title}」吗？`
     );
 
     if (!confirmed) return;
 
     try {
-      const booking = addBooking({
-        itemId: item.id,
-        itemType: type,
-        title: item.title,
+      const bookingId = addBooking({
+        itemId: type === 'item' ? itemObj.id : undefined,
+        item: type === 'item' ? itemObj as any : undefined,
+        serviceId: type === 'service' ? itemObj.id : undefined,
+        service: type === 'service' ? itemObj as any : undefined,
         publisherId,
         publisher,
         responderId: currentUser.id,
         responder: currentUser,
+        appointmentTime: selectedTimeSlot || new Date(Date.now() + 86400000).toISOString().slice(0, 16).replace('T', ' '),
         status: 'pending',
-        scheduledTime: selectedTimeSlot || undefined,
-        location: 'location' in item ? item.location : item.building + item.unit,
-        notes: ''
+        needBothConfirm: itemObj.needBothConfirm,
+        type
       });
 
-      console.log('[Detail] Booking created:', booking);
+      console.log('[Detail] Booking created:', bookingId);
       showToast('预约成功', 'success');
 
       setTimeout(() => {
         Taro.redirectTo({
-          url: `/pages/publish-success/index?type=booking&id=${booking.id}`
+          url: `/pages/publish-success/index?type=booking&id=${bookingId}`
         });
       }, 1500);
     } catch (error) {
@@ -135,34 +137,36 @@ const DetailPage: React.FC = () => {
       return;
     }
 
+    const defaultTime = new Date(Date.now() + 3600000);
+    const timeStr = defaultTime.toISOString().slice(0, 16).replace('T', ' ');
+
     const confirmed = await showModal(
       '确认接单',
-      '确认接受该服务请求吗？接单后请及时联系用户确认上门时间。'
+      `确认接受「${itemObj.title}」吗？\n预计上门时间：${timeStr}`
     );
 
     if (!confirmed) return;
 
     try {
-      const booking = addBooking({
-        itemId: item.id,
-        itemType: type,
-        title: item.title,
+      const bookingId = addBooking({
+        serviceId: itemObj.id,
+        service: itemObj as any,
         publisherId,
         publisher,
         responderId: currentUser.id,
         responder: currentUser,
-        status: 'accepted',
-        scheduledTime: new Date(Date.now() + 3600000).toISOString(),
-        location: 'location' in item ? item.location : item.building + item.unit,
-        notes: ''
+        appointmentTime: timeStr,
+        status: 'confirmed',
+        needBothConfirm: itemObj.needBothConfirm,
+        type: 'service'
       });
 
-      console.log('[Detail] Service accepted:', booking);
+      console.log('[Detail] Service accepted:', bookingId);
       showToast('接单成功', 'success');
 
       setTimeout(() => {
         Taro.redirectTo({
-          url: `/pages/publish-success/index?type=accept&id=${booking.id}`
+          url: `/pages/publish-success/index?type=accept&id=${bookingId}`
         });
       }, 1500);
     } catch (error) {
@@ -176,18 +180,15 @@ const DetailPage: React.FC = () => {
       showToast('不能收藏自己');
       return;
     }
-
     setIsFavorited(!isFavorited);
     showToast(isFavorited ? '已取消收藏' : '已收藏联系人', 'success');
-    console.log('[Detail] Toggle favorite:', publisherId);
   };
 
   const handleContact = () => {
     showToast('聊天功能开发中');
-    console.log('[Detail] Contact user:', publisherId);
   };
 
-  const needsDualConfirmation = 'dualConfirmation' in item && item.dualConfirmation;
+  const needsDualConfirmation = itemObj.isValuable || itemObj.needBothConfirm;
 
   return (
     <ScrollView scrollY className={styles.detailPage}>
@@ -212,14 +213,19 @@ const DetailPage: React.FC = () => {
               {typeTag.text}
             </View>
             <View className={styles.titleSection}>
-              <Text className={styles.title}>{item.title}</Text>
+              <Text className={styles.title}>{itemObj.title}</Text>
               <View>
                 <Text className={styles.categoryTag}>
-                  {item.category}
+                  {itemObj.category}
                 </Text>
-                {type === 'item' && 'deliveryType' in item && (
+                {type === 'item' && (
                   <Text className={styles.categoryTag}>
-                    {getDeliveryTypeText(item.deliveryType)}
+                    {getDeliveryTypeText((itemObj as any).deliveryType)}
+                  </Text>
+                )}
+                {type === 'service' && (itemObj as any).estimatedTime && (
+                  <Text className={styles.categoryTag}>
+                    约{(itemObj as any).estimatedTime}
                   </Text>
                 )}
               </View>
@@ -229,27 +235,15 @@ const DetailPage: React.FC = () => {
           <View className={styles.infoRow}>
             <View className={styles.infoItem}>
               <Text className={styles.infoIcon}>📍</Text>
-              <Text>{item.building} {item.unit}</Text>
+              <Text>{itemObj.building} {itemObj.unit}</Text>
             </View>
-            {type === 'item' && 'estimatedTime' in item && (
-              <View className={styles.infoItem}>
-                <Text className={styles.infoIcon}>⏱️</Text>
-                <Text>{item.estimatedTime}</Text>
-              </View>
-            )}
-            {type === 'service' && 'estimatedTime' in item && (
-              <View className={styles.infoItem}>
-                <Text className={styles.infoIcon}>⏱️</Text>
-                <Text>约{item.estimatedTime}分钟</Text>
-              </View>
-            )}
             <View className={styles.infoItem}>
               <Text className={styles.infoIcon}>📅</Text>
-              <Text>{formatDate(item.createdAt)}</Text>
+              <Text>{formatDate(itemObj.createdAt)}</Text>
             </View>
           </View>
 
-          <Text className={styles.description}>{item.description}</Text>
+          <Text className={styles.description}>{itemObj.description}</Text>
 
           {images.length > 1 && (
             <ScrollView scrollX className={styles.imagesRow} showScrollbar={false}>
@@ -274,9 +268,12 @@ const DetailPage: React.FC = () => {
             </View>
           )}
 
-          {'timeSlots' in item && item.timeSlots.length > 0 && (
-            <View className={styles.timeSlotList}>
-              {item.timeSlots.map((slot) => (
+          {type === 'item' && (itemObj as any).timeSlots && (itemObj as any).timeSlots.length > 0 && (
+            <View style={{ marginTop: 24 }}>
+              <Text style={{ fontSize: 28, fontWeight: 600, marginBottom: 16 }}>
+                ⏰ 选择交换时间段
+              </Text>
+              {(itemObj as any).timeSlots.map((slot: string) => (
                 <Button
                   key={slot}
                   className={styles.timeSlotItem}
@@ -284,10 +281,10 @@ const DetailPage: React.FC = () => {
                   style={{
                     background: selectedTimeSlot === slot
                       ? 'rgba(255, 138, 61, 0.1)'
-                      : '$color-bg-hover',
+                      : '#f5f5f5',
                     border: selectedTimeSlot === slot
                       ? '2rpx solid #FF8A3D'
-                      : 'none'
+                      : '2rpx solid transparent'
                   }}
                 >
                   <Text className={styles.timeSlotText}>{slot}</Text>
@@ -298,6 +295,27 @@ const DetailPage: React.FC = () => {
                   </Text>
                 </Button>
               ))}
+            </View>
+          )}
+
+          {type === 'service' && (itemObj as any).volunteer && (
+            <View style={{ marginTop: 24 }}>
+              <Text style={{ fontSize: 28, fontWeight: 600, marginBottom: 16 }}>
+                🤝 志愿者信息
+              </Text>
+              <View style={{ display: 'flex', alignItems: 'center', gap: 16, padding: 16, background: '#f5f5f5', borderRadius: 12 }}>
+                <Image
+                  style={{ width: 64, height: 64, borderRadius: 32 }}
+                  src={(itemObj as any).volunteer.avatar}
+                  mode='aspectFill'
+                />
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 28, fontWeight: 500 }}>{(itemObj as any).volunteer.name}</Text>
+                  <Text style={{ fontSize: 24, color: '#999' }}>
+                    上门时间：{(itemObj as any).appointmentTime || '待确认'}
+                  </Text>
+                </View>
+              </View>
             </View>
           )}
         </View>
@@ -333,19 +351,22 @@ const DetailPage: React.FC = () => {
           </View>
         </View>
 
-        {'status' in item && (
+        {type === 'service' && (itemObj as any).status && (
           <View className={styles.sectionCard}>
             <Text className={styles.sectionTitle}>📋 服务状态</Text>
             <View className={styles.tagsRow}>
               <Text className={styles.tag}>
                 状态：{
-                  item.status === 'open' ? '待接单' :
-                  item.status === 'accepted' ? '已接单' :
-                  item.status === 'in_progress' ? '进行中' : '已完成'
+                  (itemObj as any).status === 'open' ? '待接单' :
+                  (itemObj as any).status === 'accepted' ? '已接单' :
+                  (itemObj as any).status === 'in_progress' ? '进行中' : '已完成'
                 }
               </Text>
-              {'volunteer' in item && item.volunteer && (
-                <Text className={styles.tag}>志愿者：{item.volunteer.name}</Text>
+              {(itemObj as any).volunteer && (
+                <Text className={styles.tag}>志愿者：{(itemObj as any).volunteer.name}</Text>
+              )}
+              {(itemObj as any).appointmentTime && (
+                <Text className={styles.tag}>上门时间：{(itemObj as any).appointmentTime}</Text>
               )}
             </View>
           </View>
@@ -357,16 +378,20 @@ const DetailPage: React.FC = () => {
           联系TA
         </Button>
         {type === 'service' && !isOwner ? (
-          <Button className={styles.primaryBtn} onClick={handleAcceptService}>
-            立即接单
+          <Button
+            className={styles.primaryBtn}
+            onClick={handleAcceptService}
+            disabled={(itemObj as any).status !== 'open'}
+          >
+            {(itemObj as any).status !== 'open' ? '已被接单' : '立即接单'}
           </Button>
         ) : (
           <Button
             className={styles.primaryBtn}
             onClick={handleBook}
-            disabled={isOwner}
+            disabled={isOwner || (type === 'item' && (itemObj as any).status !== 'available')}
           >
-            {isOwner ? '您的发布' : '立即预约'}
+            {isOwner ? '您的发布' : type === 'item' && (itemObj as any).status !== 'available' ? '已被预约' : '立即预约'}
           </Button>
         )}
       </View>

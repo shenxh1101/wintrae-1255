@@ -7,7 +7,7 @@ import styles from './index.module.scss';
 
 const ReportPage: React.FC = () => {
   const [bookingId, setBookingId] = useState<string>('');
-  const [mode, setMode] = useState<'submit' | 'history'>('submit');
+  const [mode, setMode] = useState<'select' | 'submit' | 'history'>('select');
   const [selectedReason, setSelectedReason] = useState<string>('');
   const [description, setDescription] = useState('');
   const [photos, setPhotos] = useState<string[]>([]);
@@ -17,8 +17,18 @@ const ReportPage: React.FC = () => {
 
   useEffect(() => {
     const params = Taro.getCurrentInstance().router?.params || {};
-    setBookingId(params.id as string || '');
-    setMode((params.mode as 'submit' | 'history') || 'submit');
+    const paramId = params.id as string || '';
+    const paramMode = params.mode as string || '';
+
+    if (paramId) {
+      setBookingId(paramId);
+      setMode('submit');
+    }
+
+    if (paramMode === 'history') {
+      setMode('history');
+    }
+
     console.log('[Report] Page params:', params);
 
     const saved = Taro.getStorageSync('reports');
@@ -30,6 +40,14 @@ const ReportPage: React.FC = () => {
       }
     }
   }, []);
+
+  const myBookings = useMemo(() =>
+    bookings.filter(b =>
+      (b.publisherId === currentUser.id || b.responderId === currentUser.id) &&
+      b.status !== 'cancelled'
+    ),
+    [bookings, currentUser.id]
+  );
 
   const booking = useMemo(() =>
     bookings.find(b => b.id === bookingId),
@@ -53,14 +71,18 @@ const ReportPage: React.FC = () => {
     '其他原因'
   ];
 
+  const handleSelectBooking = (id: string) => {
+    setBookingId(id);
+    setMode('submit');
+    console.log('[Report] Selected booking:', id);
+  };
+
   const handleReasonSelect = (reason: string) => {
-    if (mode === 'history') return;
     setSelectedReason(reason);
     console.log('[Report] Selected reason:', reason);
   };
 
   const handleAddPhoto = async () => {
-    if (mode === 'history') return;
     if (photos.length >= 3) {
       showToast('最多上传3张照片');
       return;
@@ -79,7 +101,6 @@ const ReportPage: React.FC = () => {
   };
 
   const handleRemovePhoto = (index: number) => {
-    if (mode === 'history') return;
     setPhotos(prev => prev.filter((_, i) => i !== index));
   };
 
@@ -137,7 +158,15 @@ const ReportPage: React.FC = () => {
   };
 
   const handleCancel = () => {
-    Taro.navigateBack();
+    if (mode === 'submit' && !Taro.getCurrentInstance().router?.params?.id) {
+      setMode('select');
+      setBookingId('');
+      setSelectedReason('');
+      setDescription('');
+      setPhotos([]);
+    } else {
+      Taro.navigateBack();
+    }
   };
 
   const getStatusText = (status: string) => {
@@ -229,11 +258,113 @@ const ReportPage: React.FC = () => {
     );
   }
 
+  if (mode === 'select') {
+    return (
+      <ScrollView scrollY className={styles.reportPage}>
+        <View className={styles.pageHeader}>
+          <Text className={styles.pageTitle}>⚠️ 爽约反馈</Text>
+          <Text className={styles.pageSubtitle}>
+            请选择您要反馈的预约记录
+          </Text>
+        </View>
+
+        <View className={styles.warningBox}>
+          <Text className={styles.warningTitle}>
+            ⚠️ 注意事项
+          </Text>
+          <Text className={styles.warningText}>
+            • 请确保反馈内容真实有效{'\n'}
+            • 恶意举报将影响您的信用分{'\n'}
+            • 30天内累计3次爽约将被限制发布功能7天
+          </Text>
+        </View>
+
+        <Text className={styles.sectionTitle} style={{ margin: '0 0 16rpx 0' }}>
+          📋 选择预约记录
+        </Text>
+
+        {myBookings.length === 0 ? (
+          <View className={styles.sectionCard} style={{ textAlign: 'center', padding: 60 }}>
+            <Text style={{ fontSize: 48 }}>📋</Text>
+            <Text style={{ fontSize: 28, color: '#999', marginTop: 16, display: 'block' }}>
+              暂无可反馈的预约记录
+            </Text>
+          </View>
+        ) : (
+          myBookings.map((b) => {
+            const otherUser = b.publisherId === currentUser.id ? b.responder : b.publisher;
+            const title = b.item?.title || b.service?.title || '未知';
+            return (
+              <View key={b.id} className={styles.sectionCard} style={{ marginBottom: 16 }}>
+                <View style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <Image
+                    style={{ width: 64, height: 64, borderRadius: 32, flexShrink: 0 }}
+                    src={otherUser?.avatar || ''}
+                    mode='aspectFill'
+                  />
+                  <View style={{ flex: 1, minWidth: 0 }}>
+                    <Text style={{ fontSize: 28, fontWeight: 500 }}>{title}</Text>
+                    <Text style={{ fontSize: 24, color: '#999', marginTop: 4 }}>
+                      {otherUser?.name} · {b.appointmentTime}
+                    </Text>
+                  </View>
+                  <Button
+                    style={{
+                      padding: '8rpx 24rpx',
+                      background: '#FF8A3D',
+                      color: '#fff',
+                      borderRadius: 8,
+                      fontSize: 24,
+                      flexShrink: 0
+                    }}
+                    onClick={() => handleSelectBooking(b.id)}
+                  >
+                    选择
+                  </Button>
+                </View>
+              </View>
+            );
+          })
+        )}
+
+        {submittedReports.length > 0 && (
+          <Button
+            style={{
+              width: '100%',
+              marginTop: 32,
+              background: '#f5f5f5',
+              color: '#666',
+              borderRadius: 12,
+              padding: '24rpx',
+              fontSize: 28
+            }}
+            onClick={() => setMode('history')}
+          >
+            📋 查看反馈记录 ({submittedReports.length})
+          </Button>
+        )}
+      </ScrollView>
+    );
+  }
+
   if (!booking || !targetUser) {
     return (
-      <ScrollView className={styles.reportPage}>
-        <View style={{ padding: 100, textAlign: 'center' }}>
-          <Text style={{ fontSize: 32, color: '#999' }}>加载中...</Text>
+      <ScrollView scrollY className={styles.reportPage}>
+        <View className={styles.pageHeader}>
+          <Text className={styles.pageTitle}>⚠️ 爽约反馈</Text>
+          <Text className={styles.pageSubtitle}>未找到预约记录</Text>
+        </View>
+        <View className={styles.sectionCard} style={{ textAlign: 'center', padding: 60 }}>
+          <Text style={{ fontSize: 48 }}>📋</Text>
+          <Text style={{ fontSize: 28, color: '#999', marginTop: 16, display: 'block' }}>
+            未找到对应的预约记录
+          </Text>
+          <Button
+            style={{ marginTop: 32, background: '#FF8A3D', color: '#fff', borderRadius: 12, padding: '16rpx 48rpx' }}
+            onClick={() => { setMode('select'); setBookingId(''); }}
+          >
+            选择预约记录
+          </Button>
         </View>
       </ScrollView>
     );
@@ -244,7 +375,7 @@ const ReportPage: React.FC = () => {
       <View className={styles.pageHeader}>
         <Text className={styles.pageTitle}>⚠️ 爽约反馈</Text>
         <Text className={styles.pageSubtitle}>
-          请如实填写反馈内容，平台会在24小时内审核处理。恶意举报将影响您的信用分。
+          请如实填写反馈内容，平台会在24小时内审核处理。
         </Text>
       </View>
 
@@ -266,17 +397,15 @@ const ReportPage: React.FC = () => {
         <View className={styles.bookingInfo}>
           <View className={styles.infoRow}>
             <Text className={styles.infoLabel}>服务内容</Text>
-            <Text className={styles.infoValue}>{booking.title}</Text>
+            <Text className={styles.infoValue}>{booking.item?.title || booking.service?.title || '未知'}</Text>
           </View>
           <View className={styles.infoRow}>
             <Text className={styles.infoLabel}>预约时间</Text>
-            <Text className={styles.infoValue}>
-              {booking.scheduledTime ? new Date(booking.scheduledTime).toLocaleString() : '未约定'}
-            </Text>
+            <Text className={styles.infoValue}>{booking.appointmentTime}</Text>
           </View>
           <View className={styles.infoRow}>
-            <Text className={styles.infoLabel}>预约地点</Text>
-            <Text className={styles.infoValue}>{booking.location}</Text>
+            <Text className={styles.infoLabel}>类型</Text>
+            <Text className={styles.infoValue}>{booking.type === 'item' ? '物品交换' : '代办服务'}</Text>
           </View>
         </View>
 
@@ -290,7 +419,7 @@ const ReportPage: React.FC = () => {
           <View className={styles.userInfo}>
             <Text className={styles.userName}>被举报人：{targetUser.name}</Text>
             <Text className={styles.userDesc}>
-              {targetUser.building} · 信用分 {targetUser.rating * 20}
+              {targetUser.building} · 评分 {targetUser.rating.toFixed(1)}
             </Text>
           </View>
         </View>

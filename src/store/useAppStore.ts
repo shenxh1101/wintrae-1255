@@ -22,10 +22,11 @@ interface AppState {
   setSearchKeyword: (keyword: string) => void;
   addItem: (item: Item) => void;
   addService: (service: Service) => void;
+  addBooking: (booking: Omit<Booking, 'id' | 'createdAt' | 'completionPhotos' | 'publisherConfirmed' | 'responderConfirmed'>) => string;
   updateBooking: (bookingId: string, updates: Partial<Booking>) => void;
   markMessageRead: (messageId: string) => void;
   confirmBooking: (bookingId: string, isPublisher: boolean) => void;
-  completeBooking: (bookingId: string, photos: string[], rating: number, review: string) => void;
+  completeBooking: (bookingId: string, data: { photos?: string[]; rating?: number; review?: string; tags?: string[] }) => void;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -51,6 +52,65 @@ export const useAppStore = create<AppState>((set, get) => ({
   addService: (service) => set((state) => ({
     services: [service, ...state.services]
   })),
+
+  addBooking: (bookingInput) => {
+    const id = 'b' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    const newBooking: Booking = {
+      ...bookingInput,
+      id,
+      completionPhotos: [],
+      publisherConfirmed: bookingInput.status === 'confirmed',
+      responderConfirmed: bookingInput.status === 'confirmed',
+      createdAt: new Date().toISOString()
+    };
+    set((state) => ({ bookings: [newBooking, ...state.bookings] }));
+
+    if (bookingInput.type === 'item' && bookingInput.itemId) {
+      set((state) => ({
+        items: state.items.map(i =>
+          i.id === bookingInput.itemId ? { ...i, status: 'reserved' as const } : i
+        )
+      }));
+    }
+
+    if (bookingInput.type === 'service' && bookingInput.serviceId) {
+      set((state) => ({
+        services: state.services.map(s =>
+          s.id === bookingInput.serviceId
+            ? {
+                ...s,
+                status: 'accepted' as const,
+                volunteerId: bookingInput.responderId,
+                volunteer: bookingInput.responder,
+                appointmentTime: bookingInput.appointmentTime
+              }
+            : s
+        )
+      }));
+    }
+
+    const newMessage: Message = {
+      id: 'm' + Date.now().toString(36),
+      type: 'booking',
+      title: bookingInput.type === 'item' ? '新的物品预约' : '新的服务接单',
+      content: bookingInput.type === 'item'
+        ? `${bookingInput.responder.name} 预约了「${bookingInput.item?.title || bookingInput.service?.title}」`
+        : `${bookingInput.responder.name} 接单了「${bookingInput.service?.title || bookingInput.item?.title}」`,
+      relatedId: id,
+      senderId: bookingInput.responderId,
+      sender: bookingInput.responder,
+      receiverId: bookingInput.publisherId,
+      receiver: bookingInput.publisher,
+      isRead: false,
+      createdAt: new Date().toISOString()
+    };
+    set((state) => ({
+      messages: [newMessage, ...state.messages],
+      unreadCount: state.unreadCount + 1
+    }));
+
+    return id;
+  },
 
   updateBooking: (bookingId, updates) => set((state) => ({
     bookings: state.bookings.map(b =>
@@ -88,10 +148,17 @@ export const useAppStore = create<AppState>((set, get) => ({
     });
   },
 
-  completeBooking: (bookingId, photos, rating, review) => set((state) => ({
+  completeBooking: (bookingId, data) => set((state) => ({
     bookings: state.bookings.map(b =>
       b.id === bookingId
-        ? { ...b, status: 'completed', completionPhotos: photos, rating, review }
+        ? {
+            ...b,
+            status: 'completed' as const,
+            completionPhotos: data.photos || b.completionPhotos,
+            rating: data.rating,
+            review: data.review,
+            completedAt: new Date().toISOString()
+          }
         : b
     )
   }))

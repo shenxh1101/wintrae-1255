@@ -88,7 +88,7 @@ const BookingPage: React.FC = () => {
 
     if (confirmed) {
       try {
-        completeBooking(bookingId, [], 0, '');
+        completeBooking(bookingId, { photos: [] });
         showToast('已完成', 'success');
         console.log('[Booking] Completed booking:', bookingId);
       } catch (error) {
@@ -100,7 +100,12 @@ const BookingPage: React.FC = () => {
 
   const handleRate = (bookingId: string) => {
     console.log('[Booking] Rate booking:', bookingId);
-    Taro.navigateTo({ url: '/pages/rating/index?id=' + bookingId });
+    Taro.navigateTo({ url: '/pages/ranking/index?id=' + bookingId + '&mode=submit' });
+  };
+
+  const handleReport = (bookingId: string) => {
+    console.log('[Booking] Report booking:', bookingId);
+    Taro.navigateTo({ url: '/pages/report/index?id=' + bookingId });
   };
 
   const handleCancel = async (bookingId: string) => {
@@ -217,6 +222,7 @@ const BookingPage: React.FC = () => {
               onComplete={() => handleComplete(booking.id)}
               onRate={() => handleRate(booking.id)}
               onCancel={() => handleCancel(booking.id)}
+              onReport={() => handleReport(booking.id)}
             />
           ))
         )}

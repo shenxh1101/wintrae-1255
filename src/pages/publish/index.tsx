@@ -139,6 +139,12 @@ const PublishPage: React.FC = () => {
         };
         addItem(newItem);
         console.log('[Publish] Item published:', newItem.id);
+
+        setTimeout(() => {
+          Taro.redirectTo({
+            url: `/pages/publish-success/index?type=${itemType}&id=${newItem.id}`
+          });
+        }, 1000);
       } else {
         const newService: Service = {
           id: generateId(),
@@ -160,13 +166,15 @@ const PublishPage: React.FC = () => {
         };
         addService(newService);
         console.log('[Publish] Service published:', newService.id);
+
+        setTimeout(() => {
+          Taro.redirectTo({
+            url: `/pages/publish-success/index?type=service&id=${newService.id}`
+          });
+        }, 1000);
       }
 
       showToast('发布成功', 'success');
-
-      setTimeout(() => {
-        Taro.redirectTo({ url: '/pages/publish-success/index' });
-      }, 1000);
     } catch (error) {
       console.error('[Publish] Submit error:', error);
       showToast('发布失败，请重试', 'error');

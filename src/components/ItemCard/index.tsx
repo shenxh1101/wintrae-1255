@@ -29,7 +29,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, onClick }) => {
             [styles.exchange]: item.type === 'exchange',
             [styles.needed]: item.type === 'needed'
           })}>
-            {item.type === 'exchange' ? '可交换' : '需求'}
+            {item.type === 'exchange' ? '可交换' : '求购/求借'}
           </Text>
           <Text className={styles.itemTitle}>{item.title}</Text>
           <Text className={styles.itemDesc}>{item.description}</Text>

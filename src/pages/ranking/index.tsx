@@ -103,17 +103,17 @@ const RatingPage: React.FC = () => {
     try {
       if (booking) {
         completeBooking(booking.id, {
+          photos: photos.length > 0 ? photos : booking.completionPhotos,
           rating,
-          comment,
-          tags: selectedTags,
-          photos
+          review: comment,
+          tags: selectedTags
         });
 
         console.log('[Rating] Submitted:', { rating, comment, tags: selectedTags, photos });
         showToast('评价成功', 'success');
 
         setTimeout(() => {
-          Taro.switchTab({ url: '/pages/booking/index' });
+          Taro.navigateBack();
         }, 1500);
       }
     } catch (error) {
@@ -198,8 +198,8 @@ const RatingPage: React.FC = () => {
                       ))}
                     </View>
                   )}
-                  {b.comment && (
-                    <Text className={styles.ratingComment}>{b.comment}</Text>
+                  {b.review && (
+                    <Text className={styles.ratingComment}>{b.review}</Text>
                   )}
                 </View>
               ))
@@ -210,11 +210,34 @@ const RatingPage: React.FC = () => {
     );
   }
 
-  if (!booking || !targetUser) {
+  if (!booking) {
+    return (
+      <ScrollView scrollY className={styles.ratingPage}>
+        <View className={styles.pageHeader}>
+          <Text className={styles.pageTitle}>⭐ 服务评价</Text>
+          <Text className={styles.pageSubtitle}>未找到预约记录</Text>
+        </View>
+        <View className={styles.sectionCard} style={{ textAlign: 'center', padding: 60 }}>
+          <Text style={{ fontSize: 48 }}>📋</Text>
+          <Text style={{ fontSize: 28, color: '#999', marginTop: 16, display: 'block' }}>
+            未找到对应的预约记录，请从预约页面进入评价
+          </Text>
+          <Button
+            style={{ marginTop: 32, background: '#FF8A3D', color: '#fff', borderRadius: 12, padding: '16rpx 48rpx' }}
+            onClick={() => Taro.switchTab({ url: '/pages/booking/index' })}
+          >
+            前往预约页
+          </Button>
+        </View>
+      </ScrollView>
+    );
+  }
+
+  if (!targetUser) {
     return (
       <ScrollView className={styles.ratingPage}>
         <View style={{ padding: 100, textAlign: 'center' }}>
-          <Text style={{ fontSize: 32, color: '#999' }}>加载中...</Text>
+          <Text style={{ fontSize: 32, color: '#999' }}>数据异常</Text>
         </View>
       </ScrollView>
     );
@@ -231,17 +254,15 @@ const RatingPage: React.FC = () => {
         <Text className={styles.bookingTitle}>📋 服务信息</Text>
         <View className={styles.infoRow}>
           <Text className={styles.infoLabel}>服务内容</Text>
-          <Text className={styles.infoValue}>{booking.title}</Text>
+          <Text className={styles.infoValue}>{booking.item?.title || booking.service?.title || '未知'}</Text>
         </View>
         <View className={styles.infoRow}>
-          <Text className={styles.infoLabel}>完成时间</Text>
-          <Text className={styles.infoValue}>
-            {booking.completedAt ? new Date(booking.completedAt).toLocaleString() : '刚刚'}
-          </Text>
+          <Text className={styles.infoLabel}>预约时间</Text>
+          <Text className={styles.infoValue}>{booking.appointmentTime}</Text>
         </View>
         <View className={styles.infoRow}>
-          <Text className={styles.infoLabel}>服务地点</Text>
-          <Text className={styles.infoValue}>{booking.location}</Text>
+          <Text className={styles.infoLabel}>类型</Text>
+          <Text className={styles.infoValue}>{booking.type === 'item' ? '物品交换' : '代办服务'}</Text>
         </View>
       </View>
 

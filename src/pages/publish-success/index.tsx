@@ -18,22 +18,33 @@ const PublishSuccessPage: React.FC = () => {
     console.log('[Success] Page params:', params);
   }, []);
 
-  const item = useMemo(() => {
-    if (publishType === 'item' || publishType === 'exchange' || publishType === 'need') {
-      return items.find(i => i.id === itemId);
+  const publishedItem = useMemo(() => {
+    if (!itemId) return null;
+
+    if (publishType === 'exchange' || publishType === 'needed') {
+      return { data: items.find(i => i.id === itemId), type: 'item' as const };
     }
-    if (publishType === 'service' || publishType === 'errand') {
-      return services.find(s => s.id === itemId);
+    if (publishType === 'service') {
+      return { data: services.find(s => s.id === itemId), type: 'service' as const };
     }
     if (publishType === 'booking' || publishType === 'accept') {
-      return bookings.find(b => b.id === itemId);
+      return { data: bookings.find(b => b.id === itemId), type: 'booking' as const };
     }
+
+    const item = items.find(i => i.id === itemId);
+    if (item) return { data: item, type: 'item' as const };
+
+    const service = services.find(s => s.id === itemId);
+    if (service) return { data: service, type: 'service' as const };
+
+    const booking = bookings.find(b => b.id === itemId);
+    if (booking) return { data: booking, type: 'booking' as const };
+
     return null;
   }, [publishType, itemId, items, services, bookings]);
 
   const getSuccessInfo = () => {
     switch (publishType) {
-      case 'item':
       case 'exchange':
         return {
           icon: '🎉',
@@ -45,7 +56,7 @@ const PublishSuccessPage: React.FC = () => {
             '贵重物品建议开启双方确认功能'
           ]
         };
-      case 'need':
+      case 'needed':
         return {
           icon: '🎯',
           title: '需求发布成功！',
@@ -57,7 +68,6 @@ const PublishSuccessPage: React.FC = () => {
           ]
         };
       case 'service':
-      case 'errand':
         return {
           icon: '📋',
           title: '代办发布成功！',
@@ -103,17 +113,14 @@ const PublishSuccessPage: React.FC = () => {
   const successInfo = getSuccessInfo();
 
   const handleViewDetail = () => {
-    if (!item) {
+    if (!publishedItem || !itemId) {
       Taro.switchTab({ url: '/pages/square/index' });
       return;
     }
 
-    const type = publishType === 'service' || publishType === 'errand' || publishType === 'booking' && 'itemType' in item && item.itemType === 'service'
-      ? 'service'
-      : 'item';
-
+    const type = publishedItem.type === 'booking' ? 'service' : publishedItem.type;
     Taro.redirectTo({
-      url: `/pages/detail/index?id=${item.id}&type=${type}`
+      url: `/pages/detail/index?id=${itemId}&type=${type}`
     });
   };
 
@@ -131,43 +138,33 @@ const PublishSuccessPage: React.FC = () => {
   };
 
   const renderInfoRows = () => {
-    if (!item) return null;
+    if (!publishedItem || !publishedItem.data) return null;
 
+    const data = publishedItem.data as any;
     const rows = [];
 
-    if ('title' in item) {
-      rows.push({
-        label: '标题',
-        value: item.title
-      });
+    if (data.title) {
+      rows.push({ label: '标题', value: data.title });
     }
 
-    if ('category' in item) {
-      rows.push({
-        label: '分类',
-        value: item.category
-      });
+    if (data.category) {
+      rows.push({ label: '分类', value: data.category });
     }
 
-    if ('deliveryType' in item) {
-      rows.push({
-        label: '配送方式',
-        value: getDeliveryTypeText(item.deliveryType as string)
-      });
+    if (data.deliveryType) {
+      rows.push({ label: '配送方式', value: getDeliveryTypeText(data.deliveryType) });
     }
 
-    if ('building' in item && 'unit' in item) {
-      rows.push({
-        label: '位置',
-        value: `${item.building} ${item.unit}`
-      });
+    if (data.building && data.unit) {
+      rows.push({ label: '位置', value: `${data.building} ${data.unit}` });
     }
 
-    if ('scheduledTime' in item && item.scheduledTime) {
-      rows.push({
-        label: '预约时间',
-        value: item.scheduledTime
-      });
+    if (data.appointmentTime) {
+      rows.push({ label: '预约时间', value: data.appointmentTime });
+    }
+
+    if (data.estimatedTime) {
+      rows.push({ label: '预计时长', value: data.estimatedTime });
     }
 
     return rows;

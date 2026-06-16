@@ -12,6 +12,7 @@ interface BookingCardProps {
   onComplete?: () => void;
   onRate?: () => void;
   onCancel?: () => void;
+  onReport?: () => void;
 }
 
 const BookingCard: React.FC<BookingCardProps> = ({
@@ -20,7 +21,8 @@ const BookingCard: React.FC<BookingCardProps> = ({
   onConfirm,
   onComplete,
   onRate,
-  onCancel
+  onCancel,
+  onReport
 }) => {
   const isPublisher = booking.publisherId === currentUserId;
   const title = booking.item?.title || booking.service?.title || '';
@@ -32,8 +34,9 @@ const BookingCard: React.FC<BookingCardProps> = ({
 
   const showConfirmBtn = booking.status === 'pending' && needMyConfirm;
   const showCompleteBtn = booking.status === 'confirmed' || booking.status === 'in_progress';
-  const showRateBtn = booking.status === 'completed' && !booking.rating && !isPublisher;
+  const showRateBtn = booking.status === 'completed' && !booking.rating;
   const showCancelBtn = booking.status === 'pending' && isPublisher;
+  const showReportBtn = booking.status === 'completed' && !booking.hasReport;
 
   return (
     <View className={styles.bookingCard}>
@@ -126,8 +129,13 @@ const BookingCard: React.FC<BookingCardProps> = ({
             去评价
           </Button>
         )}
+        {showReportBtn && onReport && (
+          <Button className={classnames(styles.actionBtn, styles.secondary)} onClick={onReport}>
+            爽约反馈
+          </Button>
+        )}
         {booking.rating && (
-          <View style={{ flex: 1, textAlign: 'center', color: '$color-success', fontSize: '$font-size-sm' }}>
+          <View style={{ flex: 1, textAlign: 'center', color: '#16A34A', fontSize: 24 }}>
             ⭐ 已评价 {booking.rating} 分
           </View>
         )}

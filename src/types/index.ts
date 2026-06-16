@@ -75,8 +75,11 @@ export interface Booking {
   completionPhotos: string[];
   rating?: number;
   review?: string;
+  tags?: string[];
+  completedAt?: string;
   createdAt: string;
   type: 'item' | 'service';
+  hasReport?: boolean;
 }
 
 export interface Message {
