@@ -1,0 +1,108 @@
+@use '@/styles/variables.scss' as *;
+
+.squarePage {
+  min-height: 100vh;
+  padding: $spacing-lg $page-padding $spacing-xl;
+  background: linear-gradient(180deg, #FFF1E6 0%, $color-bg-page 100%);
+}
+
+.pageHeader {
+  margin-bottom: $spacing-lg;
+}
+
+.pageTitle {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-sm;
+}
+
+.pageSubtitle {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  margin-bottom: $spacing-lg;
+}
+
+.quickStats {
+  display: flex;
+  gap: $spacing-md;
+  margin-bottom: $spacing-lg;
+}
+
+.statCard {
+  flex: 1;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-md;
+  text-align: center;
+  box-shadow: $shadow-card;
+}
+
+.statNumber {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+}
+
+.statLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-top: $spacing-xs;
+}
+
+.filterSection {
+  margin-bottom: $spacing-md;
+}
+
+.buildingDropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-popup;
+  padding: $spacing-md;
+  margin-top: $spacing-sm;
+  z-index: 100;
+}
+
+.buildingGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+}
+
+.buildingItem {
+  @include button-reset;
+  padding: $spacing-sm $spacing-lg;
+  border-radius: $radius-button;
+  background: $color-bg-hover;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  min-width: auto;
+
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+.buildingActive {
+  background: $color-primary;
+  color: $color-text-white;
+}
+
+.categoryTabs {
+  margin-bottom: $spacing-md;
+}
+
+.listContainer {
+  padding-bottom: $spacing-xl;
+}
+
+.loadingMore {
+  text-align: center;
+  padding: $spacing-lg;
+  color: $color-text-tertiary;
+  font-size: $font-size-sm;
+}

@@ -1,0 +1,296 @@
+@use '@/styles/variables.scss' as *;
+
+.leaderboardPage {
+  min-height: 100vh;
+  padding-bottom: $spacing-xl;
+  background: linear-gradient(180deg, #FFF1E6 0%, $color-bg-page 100%);
+}
+
+.header {
+  padding: $spacing-xl $page-padding;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+}
+
+.title {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-bold;
+  color: $color-text-white;
+  margin-bottom: $spacing-xs;
+}
+
+.subtitle {
+  font-size: $font-size-sm;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.topThree {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: $spacing-lg;
+  padding: $spacing-xl $page-padding;
+  margin-top: -$spacing-lg;
+}
+
+.topCard {
+  flex: 1;
+  max-width: 200rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-md $spacing-sm;
+  box-shadow: $shadow-card;
+  position: relative;
+}
+
+.top1 {
+  order: 2;
+  transform: translateY(-$spacing-lg);
+  box-shadow: 0 8rpx 40rpx rgba(255, 138, 61, 0.3);
+}
+
+.top2 {
+  order: 1;
+}
+
+.top3 {
+  order: 3;
+}
+
+.crown {
+  position: absolute;
+  top: -24rpx;
+  font-size: 48rpx;
+}
+
+.rankBadge {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: $radius-round;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-bold;
+  color: $color-text-white;
+  margin-bottom: $spacing-sm;
+}
+
+.rankTop1 {
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+}
+
+.rankTop2 {
+  background: linear-gradient(135deg, #C0C0C0 0%, #A8A8A8 100%);
+}
+
+.rankTop3 {
+  background: linear-gradient(135deg, #CD7F32 0%, #B87333 100%);
+}
+
+.avatar {
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: $radius-round;
+  margin-bottom: $spacing-sm;
+  border: 4rpx solid $color-bg-card;
+}
+
+.name {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  margin-bottom: 4rpx;
+  @include text-ellipsis;
+  max-width: 160rpx;
+}
+
+.score {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+}
+
+.scoreLabel {
+  font-size: 20rpx;
+  color: $color-text-tertiary;
+}
+
+.statsRow {
+  display: flex;
+  justify-content: space-around;
+  padding: $spacing-md $page-padding;
+  background: $color-bg-card;
+  margin: 0 $page-padding;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-card;
+  margin-bottom: $spacing-md;
+}
+
+.statItem {
+  text-align: center;
+}
+
+.statNumber {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+}
+
+.statLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-top: 4rpx;
+}
+
+.myRankCard {
+  margin: 0 $page-padding $spacing-md;
+  padding: $spacing-lg;
+  background: linear-gradient(135deg, rgba(255, 138, 61, 0.1) 0%, rgba(255, 193, 7, 0.1) 100%);
+  border-radius: $radius-lg;
+  border: 2rpx solid $color-primary;
+}
+
+.myRankTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-sm;
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+}
+
+.myRankInfo {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+}
+
+.myRankNum {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+  min-width: 80rpx;
+}
+
+.myRankDetails {
+  flex: 1;
+}
+
+.myRankDetailsRow {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4rpx;
+}
+
+.myRankLabel {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+}
+
+.myRankValue {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+}
+
+.listSection {
+  padding: 0 $page-padding;
+}
+
+.listTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+}
+
+.list {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-card;
+  overflow: hidden;
+}
+
+.listItem {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  padding: $spacing-md $spacing-lg;
+  border-bottom: 2rpx solid $color-divider;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.rankNum {
+  width: 48rpx;
+  font-size: $font-size-md;
+  font-weight: $font-weight-bold;
+  color: $color-text-tertiary;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.rankNormal {
+  color: $color-text-tertiary;
+}
+
+.listAvatar {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: $radius-round;
+  flex-shrink: 0;
+}
+
+.userInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.userName {
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  @include text-ellipsis;
+}
+
+.userDesc {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-top: 4rpx;
+}
+
+.userScore {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+  flex-shrink: 0;
+}
+
+.volunteerTag {
+  display: inline-block;
+  padding: 2rpx 8rpx;
+  background: rgba(255, 138, 61, 0.1);
+  color: $color-primary;
+  border-radius: $radius-button;
+  font-size: 20rpx;
+  margin-left: $spacing-xs;
+}
+
+.emptyState {
+  padding: $spacing-xl;
+  text-align: center;
+}
+
+.emptyText {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}

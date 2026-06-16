@@ -1,0 +1,334 @@
+@use '@/styles/variables.scss' as *;
+
+.detailPage {
+  min-height: 100vh;
+  padding-bottom: 160rpx;
+  background: $color-bg-page;
+}
+
+.imageGallery {
+  width: 100%;
+  height: 500rpx;
+  position: relative;
+  background: $color-bg-card;
+}
+
+.mainImage {
+  width: 100%;
+  height: 100%;
+}
+
+.imageIndicator {
+  position: absolute;
+  bottom: $spacing-md;
+  right: $spacing-md;
+  padding: 8rpx 16rpx;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: $radius-button;
+  color: $color-text-white;
+  font-size: $font-size-xs;
+}
+
+.contentSection {
+  padding: 0 $page-padding;
+  margin-top: -$spacing-lg;
+}
+
+.mainCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+  margin-bottom: $spacing-md;
+}
+
+.headerRow {
+  display: flex;
+  align-items: flex-start;
+  gap: $spacing-md;
+  margin-bottom: $spacing-md;
+}
+
+.typeTag {
+  flex-shrink: 0;
+  padding: 8rpx 20rpx;
+  border-radius: $radius-button;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+}
+
+.exchangeTag {
+  background: rgba(22, 163, 74, 0.1);
+  color: $color-success;
+}
+
+.needTag {
+  background: rgba(245, 63, 63, 0.1);
+  color: $color-error;
+}
+
+.serviceTag {
+  background: rgba(255, 138, 61, 0.1);
+  color: $color-primary;
+}
+
+.titleSection {
+  flex: 1;
+  min-width: 0;
+}
+
+.title {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-sm;
+  line-height: 1.4;
+}
+
+.categoryTag {
+  display: inline-block;
+  padding: 4rpx 12rpx;
+  background: $color-tag-bg;
+  color: $color-tag-text;
+  border-radius: $radius-button;
+  font-size: $font-size-xs;
+  margin-right: $spacing-xs;
+}
+
+.infoRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-md;
+  margin-bottom: $spacing-md;
+}
+
+.infoItem {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.infoIcon {
+  font-size: 28rpx;
+}
+
+.description {
+  font-size: $font-size-md;
+  color: $color-text-secondary;
+  line-height: 1.8;
+  margin-bottom: $spacing-md;
+}
+
+.tagsRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+}
+
+.tag {
+  padding: 8rpx 16rpx;
+  background: $color-bg-hover;
+  border-radius: $radius-button;
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+}
+
+.sectionCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+  margin-bottom: $spacing-md;
+}
+
+.sectionTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+}
+
+.publisherRow {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+}
+
+.publisherAvatar {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: $radius-round;
+  flex-shrink: 0;
+}
+
+.publisherInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.publisherName {
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  margin-bottom: 4rpx;
+}
+
+.publisherLocation {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.favoriteBtn {
+  @include button-reset;
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: $radius-round;
+  background: $color-bg-hover;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  flex-shrink: 0;
+  min-width: auto;
+
+  &:active {
+    transform: scale(0.9);
+  }
+}
+
+.favorited {
+  background: rgba(255, 193, 7, 0.1);
+}
+
+.timeSlotList {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.timeSlotItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-md;
+  background: $color-bg-hover;
+  border-radius: $radius-md;
+}
+
+.timeSlotText {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+}
+
+.timeSlotStatus {
+  font-size: $font-size-xs;
+  padding: 4rpx 12rpx;
+  border-radius: $radius-button;
+}
+
+.available {
+  background: rgba(22, 163, 74, 0.1);
+  color: $color-success;
+}
+
+.confirmed {
+  background: rgba(245, 63, 63, 0.1);
+  color: $color-error;
+}
+
+.bottomBar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: $spacing-md $page-padding;
+  padding-bottom: calc($spacing-md + env(safe-area-inset-bottom));
+  background: $color-bg-card;
+  box-shadow: 0 -4rpx 20rpx rgba(0, 0, 0, 0.06);
+  display: flex;
+  gap: $spacing-md;
+}
+
+.secondaryBtn {
+  @include button-reset;
+  flex: 1;
+  height: $button-height-lg;
+  border-radius: $radius-button;
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  background: $color-bg-hover;
+  color: $color-text-secondary;
+  min-width: auto;
+
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+.primaryBtn {
+  @include button-reset;
+  flex: 2;
+  height: $button-height-lg;
+  border-radius: $radius-button;
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  background: $color-primary;
+  color: $color-text-white;
+  min-width: auto;
+
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+.dualConfirmation {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-md;
+  background: rgba(245, 158, 11, 0.1);
+  border-radius: $radius-md;
+  margin-top: $spacing-md;
+}
+
+.dualIcon {
+  font-size: 36rpx;
+}
+
+.dualText {
+  flex: 1;
+  font-size: $font-size-xs;
+  color: #B45309;
+  line-height: 1.5;
+}
+
+.imagesRow {
+  display: flex;
+  gap: $spacing-sm;
+  margin-top: $spacing-md;
+}
+
+.thumbImage {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: $radius-md;
+  flex-shrink: 0;
+}
+
+.ratingRow {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  margin-top: 4rpx;
+}
+
+.ratingScore {
+  font-size: $font-size-sm;
+  color: $color-rating;
+  font-weight: $font-weight-semibold;
+}

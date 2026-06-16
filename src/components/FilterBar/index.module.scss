@@ -1,0 +1,51 @@
+@use '@/styles/variables.scss' as *;
+
+.filterBar {
+  display: flex;
+  gap: $spacing-sm;
+  padding: $spacing-md 0;
+  overflow-x: auto;
+  @include scroll-x-container;
+}
+
+.filterItem {
+  @include scroll-x-item(auto);
+  @include button-reset;
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-xs;
+  padding: 0 $spacing-lg;
+  height: 64rpx;
+  border-radius: $radius-button;
+  background: $color-bg-card;
+  font-size: $font-size-md;
+  color: $color-text-secondary;
+  border: 2rpx solid transparent;
+  transition: all $transition-base;
+  white-space: nowrap;
+  min-width: auto;
+
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+.active {
+  background: $color-tag-bg;
+  color: $color-tag-text;
+  border-color: $color-primary;
+}
+
+.filterIcon {
+  font-size: 28rpx;
+}
+
+.dropdownIcon {
+  font-size: 24rpx;
+  margin-left: 4rpx;
+  transition: transform $transition-fast;
+}
+
+.open {
+  transform: rotate(180deg);
+}

@@ -1,0 +1,31 @@
+@use '@/styles/variables.scss' as *;
+
+.ratingStars {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-xs;
+}
+
+.star {
+  font-size: 32rpx;
+  color: $color-text-disabled;
+  transition: all $transition-fast;
+}
+
+.active {
+  color: $color-rating;
+}
+
+.readOnly {
+  pointer-events: none;
+}
+
+.clickable {
+  cursor: pointer;
+  .star {
+    font-size: 48rpx;
+    &:active {
+      transform: scale(0.9);
+    }
+  }
+}

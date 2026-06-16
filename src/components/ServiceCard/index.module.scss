@@ -1,0 +1,201 @@
+@use '@/styles/variables.scss' as *;
+
+.serviceCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-md;
+  box-shadow: $shadow-card;
+  transition: all $transition-base;
+
+  &:active {
+    transform: scale(0.98);
+    box-shadow: $shadow-card-hover;
+  }
+}
+
+.cardHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: $spacing-md;
+  margin-bottom: $spacing-md;
+}
+
+.imageWrapper {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: $radius-md;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: $color-bg-hover;
+}
+
+.serviceImage {
+  width: 100%;
+  height: 100%;
+}
+
+.cardContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.typeTag {
+  display: inline-block;
+  padding: 4rpx 12rpx;
+  border-radius: $radius-sm;
+  font-size: $font-size-xs;
+  margin-bottom: $spacing-xs;
+}
+
+.errand {
+  background: rgba(24, 144, 255, 0.1);
+  color: $color-info;
+}
+
+.helper {
+  background: rgba(82, 196, 26, 0.1);
+  color: $color-success;
+}
+
+.statusTag {
+  display: inline-block;
+  padding: 4rpx 12rpx;
+  border-radius: $radius-sm;
+  font-size: $font-size-xs;
+  margin-left: $spacing-sm;
+}
+
+.open {
+  background: rgba(255, 125, 0, 0.1);
+  color: $color-warning;
+}
+
+.accepted {
+  background: rgba(24, 144, 255, 0.1);
+  color: $color-info;
+}
+
+.inProgress {
+  background: rgba(82, 196, 26, 0.1);
+  color: $color-success;
+}
+
+.completed {
+  background: rgba(134, 144, 156, 0.1);
+  color: $color-text-tertiary;
+}
+
+.serviceTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-xs;
+  @include text-ellipsis;
+}
+
+.serviceDesc {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  line-height: $line-height-normal;
+  @include text-ellipsis-multi(2);
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+  margin-top: $spacing-md;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4rpx;
+  padding: 4rpx 12rpx;
+  background: $color-tag-bg;
+  color: $color-tag-text;
+  border-radius: $radius-sm;
+  font-size: $font-size-xs;
+}
+
+.valuable {
+  background: rgba(245, 63, 63, 0.1);
+  color: $color-error;
+}
+
+.cardFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: $spacing-md;
+  border-top: 2rpx solid $color-divider;
+  margin-top: $spacing-md;
+}
+
+.userInfo {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  flex: 1;
+  min-width: 0;
+}
+
+.avatar {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: $radius-round;
+  flex-shrink: 0;
+}
+
+.userDetails {
+  flex: 1;
+  min-width: 0;
+}
+
+.userName {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+  @include text-ellipsis;
+}
+
+.userLocation {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  @include text-ellipsis;
+}
+
+.rating {
+  display: flex;
+  align-items: center;
+  gap: 4rpx;
+  font-size: $font-size-xs;
+  color: $color-rating;
+}
+
+.timeInfo {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  flex-shrink: 0;
+}
+
+.volunteerInfo {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+  margin-top: $spacing-sm;
+  padding-top: $spacing-sm;
+  border-top: 2rpx dashed $color-divider;
+}
+
+.volunteerLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.volunteerName {
+  font-size: $font-size-xs;
+  color: $color-success;
+  font-weight: $font-weight-medium;
+}

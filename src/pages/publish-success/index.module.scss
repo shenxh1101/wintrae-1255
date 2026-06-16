@@ -1,0 +1,159 @@
+@use '@/styles/variables.scss' as *;
+
+.successPage {
+  min-height: 100vh;
+  padding: $spacing-xl $page-padding;
+  background: linear-gradient(180deg, #FFF1E6 0%, $color-bg-page 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.successIcon {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: $radius-round;
+  background: linear-gradient(135deg, $color-success 0%, #22c55e 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 80rpx;
+  margin: $spacing-xl 0 $spacing-lg;
+  box-shadow: 0 8rpx 32rpx rgba(22, 163, 74, 0.3);
+}
+
+.successTitle {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-sm;
+}
+
+.successSubtitle {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  text-align: center;
+  margin-bottom: $spacing-xl;
+  line-height: 1.6;
+}
+
+.infoCard {
+  width: 100%;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-xl;
+  box-shadow: $shadow-card;
+}
+
+.infoRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: $spacing-sm 0;
+  border-bottom: 2rpx solid $color-divider;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.infoLabel {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.infoValue {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+  @include text-ellipsis;
+  max-width: 400rpx;
+  text-align: right;
+}
+
+.tipSection {
+  width: 100%;
+  background: rgba(255, 138, 61, 0.1);
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-xl;
+}
+
+.tipTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-primary;
+  margin-bottom: $spacing-sm;
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+}
+
+.tipText {
+  font-size: $font-size-sm;
+  color: #92400e;
+  line-height: 1.8;
+}
+
+.buttonGroup {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+  margin-top: auto;
+}
+
+.primaryBtn {
+  @include button-reset;
+  width: 100%;
+  height: $button-height-lg;
+  border-radius: $radius-button;
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  background: $color-primary;
+  color: $color-text-white;
+  min-width: 100%;
+
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+.secondaryBtn {
+  @include button-reset;
+  width: 100%;
+  height: $button-height-lg;
+  border-radius: $radius-button;
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  background: $color-bg-card;
+  color: $color-text-secondary;
+  box-shadow: $shadow-card;
+  min-width: 100%;
+
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+.shareRow {
+  display: flex;
+  gap: $spacing-md;
+  margin-top: $spacing-lg;
+}
+
+.shareBtn {
+  @include button-reset;
+  flex: 1;
+  height: $button-height-md;
+  border-radius: $radius-button;
+  font-size: $font-size-sm;
+  background: rgba(22, 93, 255, 0.1);
+  color: $color-secondary;
+  min-width: auto;
+
+  &:active {
+    opacity: 0.8;
+  }
+}

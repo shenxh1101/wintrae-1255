@@ -1,0 +1,32 @@
+@use '@/styles/variables.scss' as *;
+
+.tabSegment {
+  display: flex;
+  background: $color-bg-card;
+  border-radius: $radius-button;
+  padding: $spacing-xs;
+  box-shadow: $shadow-card;
+}
+
+.tabItem {
+  @include button-reset;
+  flex: 1;
+  height: 64rpx;
+  border-radius: $radius-button;
+  font-size: $font-size-md;
+  color: $color-text-secondary;
+  background: transparent;
+  transition: all $transition-base;
+  min-width: auto;
+
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+.active {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  color: $color-text-white;
+  font-weight: $font-weight-medium;
+  box-shadow: 0 2rpx 8rpx rgba(255, 138, 61, 0.3);
+}
