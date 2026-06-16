@@ -33,7 +33,8 @@ const MinePage: React.FC = () => {
         Taro.navigateTo({ url: '/pages/report/index?mode=select' });
         break;
       case 'rating':
-        Taro.navigateTo({ url: '/pages/ranking/index?mode=view' });
+      case 'credit':
+        Taro.navigateTo({ url: '/pages/credit/index' });
         break;
       case 'favorites':
         Taro.showToast({ title: '收藏联系人', icon: 'none' });
@@ -77,11 +78,11 @@ const MinePage: React.FC = () => {
       bgColor: 'rgba(245, 63, 63, 0.1)'
     },
     {
-      key: 'rating',
-      icon: '⭐',
-      name: '我的评价',
-      desc: '查看收到的评价和打分',
-      bgColor: 'rgba(255, 215, 0, 0.1)'
+      key: 'credit',
+      icon: '💳',
+      name: '信用记录',
+      desc: '查看评价、反馈和信用分',
+      bgColor: 'rgba(255, 193, 7, 0.1)'
     },
     {
       key: 'settings',

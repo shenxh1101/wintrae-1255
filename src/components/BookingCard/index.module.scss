@@ -183,3 +183,86 @@
   background: $color-success;
   color: $color-text-white;
 }
+
+.ratingSummary {
+  padding: $spacing-md;
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.08) 0%, rgba(255, 138, 61, 0.08) 100%);
+  border-radius: $radius-md;
+  margin-bottom: $spacing-md;
+}
+
+.ratingHeader {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-xs;
+}
+
+.ratingLabel {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  flex-shrink: 0;
+}
+
+.ratingScore {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-primary;
+}
+
+.ratingReview {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  line-height: 1.6;
+  margin-top: $spacing-xs;
+}
+
+.ratingTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-xs;
+  margin-top: $spacing-sm;
+}
+
+.ratingTag {
+  padding: 4rpx 16rpx;
+  background: rgba(255, 138, 61, 0.12);
+  color: $color-primary;
+  border-radius: $radius-button;
+  font-size: $font-size-xs;
+}
+
+.rateHint {
+  padding: $spacing-sm $spacing-md;
+  background: rgba(22, 163, 74, 0.06);
+  border-radius: $radius-md;
+  margin-bottom: $spacing-sm;
+}
+
+.rateHintText {
+  font-size: $font-size-sm;
+  color: $color-success;
+}
+
+.ratedBadge {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: $font-size-sm;
+  color: $color-success;
+  font-weight: $font-weight-medium;
+}
+
+.dualNotice {
+  margin-top: $spacing-sm;
+  padding: $spacing-sm $spacing-md;
+  background: rgba(245, 158, 11, 0.08);
+  border-radius: $radius-md;
+}
+
+.dualNotice Text {
+  font-size: $font-size-xs;
+  color: #d97706;
+}

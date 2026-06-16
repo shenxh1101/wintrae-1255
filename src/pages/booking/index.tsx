@@ -14,6 +14,8 @@ const BookingPage: React.FC = () => {
     currentUser,
     confirmBooking,
     updateBooking,
+    publisherCompleteBooking,
+    responderConfirmComplete,
     completeBooking
   } = useAppStore();
 
@@ -80,19 +82,52 @@ const BookingPage: React.FC = () => {
     }
   };
 
-  const handleComplete = async (bookingId: string) => {
+  const handlePublisherComplete = async (bookingId: string) => {
+    const booking = bookings.find(b => b.id === bookingId);
+    if (!booking) return;
+
+    const content = booking.needBothConfirm
+      ? '您确认服务/物品已顺利交付吗？提交后等待对方确认完成。'
+      : '请确认服务/物品已顺利交付，确认后将标记为完成。';
+
     const confirmed = await showModal(
       '确认完成',
-      '请确认服务/物品已顺利交付，确认后将无法撤销。'
+      content
     );
 
     if (confirmed) {
       try {
-        completeBooking(bookingId, { photos: [] });
-        showToast('已完成', 'success');
-        console.log('[Booking] Completed booking:', bookingId);
+        const isDone = publisherCompleteBooking(bookingId);
+        if (isDone) {
+          showToast('已完成，快去评价吧', 'success');
+        } else {
+          showToast('已提交，等待对方确认', 'success');
+        }
+        console.log('[Booking] Publisher complete booking:', bookingId);
       } catch (error) {
-        console.error('[Booking] Complete error:', error);
+        console.error('[Booking] Publisher complete error:', error);
+        showToast('操作失败', 'error');
+      }
+    }
+  };
+
+  const handleResponderConfirmComplete = async (bookingId: string) => {
+    const confirmed = await showModal(
+      '确认完成',
+      '您确认物品已收到/服务已完成吗？双方确认后订单将标记为完成。'
+    );
+
+    if (confirmed) {
+      try {
+        const isDone = responderConfirmComplete(bookingId);
+        if (isDone) {
+          showToast('已完成，快去评价吧', 'success');
+        } else {
+          showToast('已确认，等待对方', 'success');
+        }
+        console.log('[Booking] Responder confirm complete booking:', bookingId);
+      } catch (error) {
+        console.error('[Booking] Responder confirm error:', error);
         showToast('操作失败', 'error');
       }
     }
@@ -219,7 +254,8 @@ const BookingPage: React.FC = () => {
               booking={booking}
               currentUserId={currentUser.id}
               onConfirm={() => handleConfirm(booking.id)}
-              onComplete={() => handleComplete(booking.id)}
+              onPublisherComplete={() => handlePublisherComplete(booking.id)}
+              onResponderConfirmComplete={() => handleResponderConfirmComplete(booking.id)}
               onRate={() => handleRate(booking.id)}
               onCancel={() => handleCancel(booking.id)}
               onReport={() => handleReport(booking.id)}

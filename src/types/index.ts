@@ -72,6 +72,8 @@ export interface Booking {
   needBothConfirm: boolean;
   publisherConfirmed: boolean;
   responderConfirmed: boolean;
+  publisherCompleted: boolean;
+  responderCompleted: boolean;
   completionPhotos: string[];
   rating?: number;
   review?: string;
@@ -80,6 +82,10 @@ export interface Booking {
   createdAt: string;
   type: 'item' | 'service';
   hasReport?: boolean;
+  ratingFromPublisher?: number;
+  ratingFromResponder?: number;
+  reviewFromPublisher?: string;
+  reviewFromResponder?: string;
 }
 
 export interface Message {

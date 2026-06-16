@@ -1,0 +1,306 @@
+@use '@/styles/variables.scss' as *;
+
+.creditPage {
+  min-height: 100vh;
+  padding-bottom: $spacing-xl;
+  background: linear-gradient(180deg, #FFF1E6 0%, $color-bg-page 100%);
+}
+
+.header {
+  padding: $spacing-xl $page-padding;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  text-align: center;
+}
+
+.creditScore {
+  font-size: 96rpx;
+  font-weight: $font-weight-bold;
+  color: $color-text-white;
+  line-height: 1;
+}
+
+.creditLabel {
+  font-size: $font-size-sm;
+  color: rgba(255, 255, 255, 0.8);
+  margin-top: $spacing-xs;
+}
+
+.creditLevel {
+  display: inline-block;
+  padding: 8rpx 24rpx;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: $radius-button;
+  font-size: $font-size-sm;
+  color: $color-text-white;
+  margin-top: $spacing-md;
+}
+
+.statsRow {
+  display: flex;
+  justify-content: space-around;
+  padding: $spacing-lg 0;
+  margin: -$spacing-md $page-padding 0;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-card;
+  position: relative;
+  z-index: 2;
+}
+
+.statItem {
+  flex: 1;
+  text-align: center;
+  border-right: 2rpx solid $color-divider;
+
+  &:last-child {
+    border-right: none;
+  }
+}
+
+.statNumber {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+}
+
+.statLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-top: 4rpx;
+}
+
+.timeFilter {
+  display: flex;
+  background: $color-bg-card;
+  border-radius: $radius-button;
+  margin: $spacing-md $page-padding;
+  padding: 6rpx;
+}
+
+.timeBtn {
+  @include button-reset;
+  flex: 1;
+  height: $button-height-md;
+  border-radius: $radius-button;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  background: transparent;
+  min-width: auto;
+
+  &.active {
+    background: $color-primary;
+    color: $color-text-white;
+    font-weight: $font-weight-semibold;
+    box-shadow: 0 4rpx 12rpx rgba(255, 138, 61, 0.3);
+  }
+}
+
+.sectionCard {
+  margin: 0 $page-padding $spacing-md;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+}
+
+.sectionTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+}
+
+.tabBar {
+  display: flex;
+  background: $color-bg-hover;
+  border-radius: $radius-button;
+  padding: 6rpx;
+  margin-bottom: $spacing-md;
+}
+
+.tabItem {
+  @include button-reset;
+  flex: 1;
+  height: $button-height-md;
+  border-radius: $radius-button;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  background: transparent;
+  min-width: auto;
+
+  &.active {
+    background: $color-bg-card;
+    color: $color-primary;
+    font-weight: $font-weight-semibold;
+    box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
+  }
+}
+
+.recordItem {
+  padding: $spacing-md 0;
+  border-bottom: 2rpx solid $color-divider;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.recordHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: $spacing-xs;
+}
+
+.recordUser {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  flex: 1;
+  min-width: 0;
+}
+
+.recordAvatar {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: $radius-round;
+  flex-shrink: 0;
+}
+
+.recordUserInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.recordUserName {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  @include text-ellipsis;
+}
+
+.recordUserRole {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.recordScore {
+  display: flex;
+  align-items: center;
+  gap: 4rpx;
+  flex-shrink: 0;
+  margin-left: $spacing-sm;
+}
+
+.recordScoreText {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-primary;
+}
+
+.recordContent {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  line-height: 1.6;
+  margin-left: 80rpx;
+}
+
+.recordTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-xs;
+  margin: $spacing-xs 0 0 80rpx;
+}
+
+.recordTag {
+  padding: 4rpx 16rpx;
+  background: rgba(255, 138, 61, 0.1);
+  color: $color-primary;
+  border-radius: $radius-button;
+  font-size: $font-size-xs;
+}
+
+.recordTime {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin: $spacing-xs 0 0 80rpx;
+}
+
+.reportItem {
+  padding: $spacing-md 0;
+  border-bottom: 2rpx solid $color-divider;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.reportHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-xs;
+}
+
+.reportUser {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+}
+
+.reportStatus {
+  font-size: $font-size-xs;
+  padding: 4rpx 16rpx;
+  border-radius: $radius-button;
+}
+
+.statusPending {
+  background: rgba(245, 158, 11, 0.1);
+  color: #d97706;
+}
+
+.statusApproved {
+  background: rgba(22, 163, 74, 0.1);
+  color: $color-success;
+}
+
+.statusRejected {
+  background: rgba(245, 63, 63, 0.1);
+  color: $color-error;
+}
+
+.reportReason {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  margin-bottom: $spacing-xs;
+}
+
+.reportDesc {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  line-height: 1.6;
+  margin-bottom: $spacing-xs;
+}
+
+.reportTime {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.emptyState {
+  padding: $spacing-xl $spacing-md;
+  text-align: center;
+}
+
+.emptyIcon {
+  font-size: 80rpx;
+  margin-bottom: $spacing-sm;
+}
+
+.emptyText {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}

@@ -19,8 +19,11 @@ const SquarePage: React.FC = () => {
     services,
     selectedBuilding,
     searchKeyword,
+    sortBy,
+    currentUser,
     setSelectedBuilding,
-    setSearchKeyword
+    setSearchKeyword,
+    setSortBy
   } = useAppStore();
 
   const [mainTab, setMainTab] = useState(0);
@@ -40,6 +43,40 @@ const SquarePage: React.FC = () => {
 
   const itemCategories = [{ key: 'all', label: '全部分类' }, ...getItemCategories().map(c => ({ key: c, label: c }))];
   const serviceCategories = [{ key: 'all', label: '全部分类' }, ...getServiceCategories().map(c => ({ key: c, label: c }))];
+
+  const sortOptions = [
+    { key: 'time', label: '最新发布' },
+    { key: 'distance', label: '距离最近' },
+    { key: 'rating', label: '评分最高' }
+  ];
+
+  const sortItems = (list: any[]) => {
+    const sorted = [...list];
+    switch (sortBy) {
+      case 'time':
+        return sorted.sort((a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+      case 'distance':
+        return sorted.sort((a, b) => {
+          const aSameBuilding = a.building === currentUser.building;
+          const bSameBuilding = b.building === currentUser.building;
+          if (aSameBuilding && !bSameBuilding) return -1;
+          if (!aSameBuilding && bSameBuilding) return 1;
+          const aSameUnit = aSameBuilding && a.unit === currentUser.unit;
+          const bSameUnit = bSameBuilding && b.unit === currentUser.unit;
+          if (aSameUnit && !bSameUnit) return -1;
+          if (!aSameUnit && bSameUnit) return 1;
+          return 0;
+        });
+      case 'rating':
+        return sorted.sort((a, b) =>
+          (b.publisher?.rating || 0) - (a.publisher?.rating || 0)
+        );
+      default:
+        return sorted;
+    }
+  };
 
   const filteredItems = useMemo(() => {
     let result = items.filter(item => item.status === 'available');
@@ -65,8 +102,8 @@ const SquarePage: React.FC = () => {
       );
     }
 
-    return result;
-  }, [items, mainTab, itemSubTab, selectedBuilding, categoryFilter, searchKeyword]);
+    return sortItems(result);
+  }, [items, mainTab, itemSubTab, selectedBuilding, categoryFilter, searchKeyword, sortBy, currentUser]);
 
   const filteredServices = useMemo(() => {
     let result = services.filter(s => s.status === 'open');
@@ -92,8 +129,8 @@ const SquarePage: React.FC = () => {
       );
     }
 
-    return result;
-  }, [services, mainTab, serviceSubTab, selectedBuilding, categoryFilter, searchKeyword]);
+    return sortItems(result);
+  }, [services, mainTab, serviceSubTab, selectedBuilding, categoryFilter, searchKeyword, sortBy, currentUser]);
 
   const handleRefresh = () => {
     console.log('[Square] Pull to refresh');
@@ -202,6 +239,23 @@ const SquarePage: React.FC = () => {
           activeKey={categoryFilter}
           onChange={(key) => { setCategoryFilter(key); console.log('[Square] Category:', key); }}
         />
+      </View>
+
+      <View className={styles.sortBar}>
+        <Text className={styles.sortLabel}>排序：</Text>
+        {sortOptions.map(option => (
+          <Button
+            key={option.key}
+            className={`${styles.sortBtn} ${sortBy === option.key ? styles.sortBtnActive : ''}`}
+            onClick={() => {
+              setSortBy(option.key as any);
+              console.log('[Square] Sort by:', option.key);
+            }}
+          >
+            {option.key === 'time' ? '🕐' : option.key === 'distance' ? '📍' : '⭐'}
+            {option.label}
+          </Button>
+        ))}
       </View>
 
       <View className={styles.listContainer}>

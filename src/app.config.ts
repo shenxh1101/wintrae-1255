@@ -8,8 +8,9 @@ export default defineAppConfig({
     'pages/detail/index',
     'pages/publish-success/index',
     'pages/leaderboard/index',
-    'pages/rating/index',
-    'pages/report/index'
+    'pages/ranking/index',
+    'pages/report/index',
+    'pages/credit/index'
   ],
   window: {
     backgroundTextStyle: 'light',

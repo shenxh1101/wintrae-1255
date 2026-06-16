@@ -16,10 +16,12 @@ interface AppState {
   favoriteContacts: FavoriteContact[];
   selectedBuilding: string;
   searchKeyword: string;
+  sortBy: 'time' | 'distance' | 'rating';
   unreadCount: number;
   monthlyExchangeCount: number;
   setSelectedBuilding: (building: string) => void;
   setSearchKeyword: (keyword: string) => void;
+  setSortBy: (sort: 'time' | 'distance' | 'rating') => void;
   addItem: (item: Item) => void;
   addService: (service: Service) => void;
   addBooking: (booking: Omit<Booking, 'id' | 'createdAt' | 'completionPhotos' | 'publisherConfirmed' | 'responderConfirmed'>) => string;
@@ -27,6 +29,8 @@ interface AppState {
   markMessageRead: (messageId: string) => void;
   confirmBooking: (bookingId: string, isPublisher: boolean) => void;
   completeBooking: (bookingId: string, data: { photos?: string[]; rating?: number; review?: string; tags?: string[] }) => void;
+  publisherCompleteBooking: (bookingId: string, photos?: string[]) => boolean;
+  responderConfirmComplete: (bookingId: string) => boolean;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -39,11 +43,13 @@ export const useAppStore = create<AppState>((set, get) => ({
   favoriteContacts: mockFavoriteContacts,
   selectedBuilding: '',
   searchKeyword: '',
+  sortBy: 'time',
   unreadCount: getUnreadCount(mockCurrentUser.id),
   monthlyExchangeCount: getMonthlyExchangeCount(mockCurrentUser.id),
 
   setSelectedBuilding: (building) => set({ selectedBuilding: building }),
   setSearchKeyword: (keyword) => set({ searchKeyword: keyword }),
+  setSortBy: (sort) => set({ sortBy: sort }),
 
   addItem: (item) => set((state) => ({
     items: [item, ...state.items]
@@ -61,6 +67,8 @@ export const useAppStore = create<AppState>((set, get) => ({
       completionPhotos: [],
       publisherConfirmed: bookingInput.status === 'confirmed',
       responderConfirmed: bookingInput.status === 'confirmed',
+      publisherCompleted: false,
+      responderCompleted: false,
       createdAt: new Date().toISOString()
     };
     set((state) => ({ bookings: [newBooking, ...state.bookings] }));
@@ -148,18 +156,112 @@ export const useAppStore = create<AppState>((set, get) => ({
     });
   },
 
-  completeBooking: (bookingId, data) => set((state) => ({
-    bookings: state.bookings.map(b =>
-      b.id === bookingId
-        ? {
-            ...b,
-            status: 'completed' as const,
-            completionPhotos: data.photos || b.completionPhotos,
-            rating: data.rating,
-            review: data.review,
-            completedAt: new Date().toISOString()
-          }
-        : b
-    )
-  }))
+  publisherCompleteBooking: (bookingId, photos) => {
+    const state = get();
+    const booking = state.bookings.find(b => b.id === bookingId);
+    if (!booking) return false;
+    if (booking.status === 'completed') return true;
+
+    let isCompleted = false;
+    const updates: Partial<Booking> = {
+      publisherCompleted: true,
+      completionPhotos: photos && photos.length > 0 ? photos : booking.completionPhotos,
+    };
+
+    if (!booking.needBothConfirm) {
+      updates.status = 'completed';
+      updates.responderCompleted = true;
+      updates.completedAt = new Date().toISOString();
+      isCompleted = true;
+    }
+
+    set({
+      bookings: state.bookings.map(b =>
+        b.id === bookingId ? { ...b, ...updates } : b
+      )
+    });
+
+    console.log('[Store] Publisher complete booking:', bookingId, 'isCompleted:', isCompleted);
+    return isCompleted;
+  },
+
+  responderConfirmComplete: (bookingId) => {
+    const state = get();
+    const booking = state.bookings.find(b => b.id === bookingId);
+    if (!booking) return false;
+    if (booking.status === 'completed') return true;
+
+    if (!booking.needBothConfirm) {
+      return booking.publisherCompleted;
+    }
+
+    let isCompleted = false;
+    const updates: Partial<Booking> = {
+      responderCompleted: true,
+    };
+
+    if (booking.publisherCompleted) {
+      updates.status = 'completed';
+      updates.completedAt = new Date().toISOString();
+      isCompleted = true;
+    }
+
+    set({
+      bookings: state.bookings.map(b =>
+        b.id === bookingId ? { ...b, ...updates } : b
+      )
+    });
+
+    console.log('[Store] Responder confirm complete booking:', bookingId, 'isCompleted:', isCompleted);
+    return isCompleted;
+  },
+
+  completeBooking: (bookingId, data) => {
+    const state = get();
+    const booking = state.bookings.find(b => b.id === bookingId);
+    if (!booking) return;
+
+    const isPublisher = booking.publisherId === state.currentUser.id;
+
+    const updates: Partial<Booking> = {};
+
+    if (data.photos && data.photos.length > 0) {
+      updates.completionPhotos = data.photos;
+    }
+
+    if (data.rating !== undefined) {
+      if (isPublisher) {
+        updates.ratingFromPublisher = data.rating;
+        updates.reviewFromPublisher = data.review;
+      } else {
+        updates.ratingFromResponder = data.rating;
+        updates.reviewFromResponder = data.review;
+      }
+
+      if (
+        (booking.ratingFromPublisher !== undefined || booking.ratingFromResponder !== undefined) ||
+        (data.rating !== undefined && (isPublisher ? booking.ratingFromResponder !== undefined : booking.ratingFromPublisher !== undefined))
+      ) {
+        const pRating = isPublisher ? data.rating : booking.ratingFromPublisher;
+        const rRating = isPublisher ? booking.ratingFromResponder : data.rating;
+        const allRatings = [pRating, rRating].filter(r => r !== undefined) as number[];
+        if (allRatings.length > 0) {
+          updates.rating = Math.round(allRatings.reduce((a, b) => a + b, 0) / allRatings.length);
+        }
+      } else {
+        updates.rating = data.rating;
+      }
+
+      updates.tags = data.tags;
+      updates.review = data.review;
+    }
+
+    set({
+      bookings: state.bookings.map(b =>
+        b.id === bookingId ? { ...b, ...updates } : b
+      )
+    });
+
+    console.log('[Store] Complete booking with rating:', bookingId, 'isPublisher:', isPublisher);
+  }
 }));
