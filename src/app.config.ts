@@ -10,7 +10,8 @@ export default defineAppConfig({
     'pages/leaderboard/index',
     'pages/ranking/index',
     'pages/report/index',
-    'pages/credit/index'
+    'pages/credit/index',
+    'pages/appeal/index'
   ],
   window: {
     backgroundTextStyle: 'light',

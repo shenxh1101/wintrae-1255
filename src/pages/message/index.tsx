@@ -9,7 +9,7 @@ import { showToast, showModal } from '@/utils';
 import styles from './index.module.scss';
 
 const MessagePage: React.FC = () => {
-  const { messages, unreadCount, currentUser, markMessageRead } = useAppStore();
+  const { messages, unreadCount, currentUser, markMessageRead, markAllMessagesRead } = useAppStore();
   const [activeTab, setActiveTab] = useState(0);
 
   const tabs = ['全部消息', '系统通知', '预约通知', '信用提醒', '聊天消息'];
@@ -49,6 +49,8 @@ const MessagePage: React.FC = () => {
           Taro.navigateTo({ url: '/pages/ranking/index?id=' + message.relatedId + '&mode=view' });
         } else if (message.title === '对方已确认完成') {
           Taro.navigateTo({ url: '/pages/ranking/index?id=' + message.relatedId + '&mode=submit' });
+        } else if (message.title === '申诉已提交') {
+          Taro.navigateTo({ url: '/pages/appeal/index?mode=history' });
         } else {
           Taro.navigateTo({ url: '/pages/credit/index' });
         }
@@ -71,11 +73,7 @@ const MessagePage: React.FC = () => {
 
     if (confirmed) {
       try {
-        messages.forEach(m => {
-          if (!m.isRead) {
-            markMessageRead(m.id);
-          }
-        });
+        markAllMessagesRead();
         showToast('已全部标记为已读', 'success');
         console.log('[Message] Marked all as read');
       } catch (error) {

@@ -27,6 +27,7 @@ interface AppState {
   addBooking: (booking: Omit<Booking, 'id' | 'createdAt' | 'completionPhotos' | 'publisherConfirmed' | 'responderConfirmed'>) => string;
   updateBooking: (bookingId: string, updates: Partial<Booking>) => void;
   markMessageRead: (messageId: string) => void;
+  markAllMessagesRead: () => void;
   addMessage: (message: Omit<Message, 'id' | 'isRead' | 'createdAt'>) => void;
   confirmBooking: (bookingId: string, isPublisher: boolean) => void;
   completeBooking: (bookingId: string, data: { photos?: string[]; rating?: number; review?: string; tags?: string[] }) => void;
@@ -131,8 +132,24 @@ export const useAppStore = create<AppState>((set, get) => ({
     messages: state.messages.map(m =>
       m.id === messageId ? { ...m, isRead: true } : m
     ),
-    unreadCount: state.unreadCount - 1
+    unreadCount: Math.max(0, state.unreadCount - 1)
   })),
+
+  markAllMessagesRead: () => set((state) => {
+    const userId = state.currentUser.id;
+    let changed = 0;
+    const newMessages = state.messages.map(m => {
+      if (!m.isRead && (m.receiverId === userId || m.type === 'system') {
+        changed++;
+        return { ...m, isRead: true };
+      }
+      return m;
+    });
+    return {
+      messages: newMessages,
+      unreadCount: Math.max(0, state.unreadCount - changed)
+    };
+  }),
 
   addMessage: (messageInput) => {
     const id = 'm' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);

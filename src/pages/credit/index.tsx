@@ -4,7 +4,7 @@ import Taro from '@tarojs/taro';
 import { useAppStore } from '@/store/useAppStore';
 import RatingStars from '@/components/RatingStars';
 import TabSegment from '@/components/TabSegment';
-import { formatDate } from '@/utils';
+import { formatDate, showToast } from '@/utils';
 import styles from './index.module.scss';
 
 const CreditPage: React.FC = () => {
@@ -14,8 +14,12 @@ const CreditPage: React.FC = () => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [receivedReports, setReceivedReports] = useState<any[]>([]);
   const [myReports, setMyReports] = useState<any[]>([]);
+  const [appeals, setAppeals] = useState<any[]>([]);
+  const [, setRefreshKey] = useState(0);
 
   const tabs = ['收到的评价', '我发起的反馈', '我收到的反馈'];
+
+  const forceRefresh = () => setRefreshKey(k => k + 1);
 
   useEffect(() => {
     try {
@@ -29,6 +33,14 @@ const CreditPage: React.FC = () => {
       }
     } catch (e) {
       console.error('[Credit] Load reports error:', e);
+    }
+    try {
+      const appealsSaved = Taro.getStorageSync('appeals');
+      if (appealsSaved) {
+        setAppeals(JSON.parse(appealsSaved));
+      }
+    } catch (e) {
+      console.error('[Credit] Load appeals error:', e);
     }
   }, [currentUser.id]);
 
@@ -73,7 +85,8 @@ const CreditPage: React.FC = () => {
           review: isPublisher ? b.reviewFromResponder : b.reviewFromPublisher,
           tags: b.tags,
           date: b.completedAt || b.createdAt,
-          booking
+          completionPhotos: b.completionPhotos || [],
+          booking: b
         };
       })
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -162,6 +175,41 @@ const CreditPage: React.FC = () => {
 
   const handleGoToReport = () => {
     Taro.navigateTo({ url: '/pages/report/index?mode=select' });
+  };
+
+  const handleGoToAppealHistory = () => {
+    Taro.navigateTo({ url: '/pages/appeal/index?mode=history' });
+  };
+
+  const handleGoToAppeal = (report: any) => {
+    const paramReportId = report.id ? encodeURIComponent(report.id) : '';
+    const paramReportedUser = report.reportedUserId ? encodeURIComponent(report.reportedUserId) : '';
+    Taro.navigateTo({
+      url: `/pages/appeal/index?reportId=${paramReportId}&reportedUserId=${paramReportedUser}`
+    });
+  };
+
+  const findReporterName = (reporterId: string, relatedBooking?: any) => {
+    if (!relatedBooking) return '邻居用户';
+    if (relatedBooking.publisherId === reporterId) return relatedBooking.publisher?.name || '邻居用户';
+    if (relatedBooking.responderId === reporterId) return relatedBooking.responder?.name || '邻居用户';
+    return '邻居用户';
+  };
+
+  const findReporterInfo = (reporterId: string, relatedBooking?: any) => {
+    if (!relatedBooking) return null;
+    if (relatedBooking.publisherId === reporterId) return relatedBooking.publisher;
+    if (relatedBooking.responderId === reporterId) return relatedBooking.responder;
+    return null;
+  };
+
+  const hasAppeal = (reportId: string) => {
+    return appeals.some((a: any) => a.reportId === reportId);
+  };
+
+  const getAppealStatus = (reportId: string) => {
+    const a = appeals.find((x: any) => x.reportId === reportId);
+    return a ? a.status : null;
   };
 
   const renderRatings = () => {
@@ -257,8 +305,18 @@ const CreditPage: React.FC = () => {
               </View>
               {r.review && (
                 <View className={styles.detailSection}>
-                  <Text className={styles.detailTitle}>� 评价内容</Text>
+                  <Text className={styles.detailTitle}>💬 评价内容</Text>
                   <Text className={styles.detailReview}>{r.review}</Text>
+                </View>
+              )}
+              {r.completionPhotos && r.completionPhotos.length > 0 && (
+                <View className={styles.detailSection}>
+                  <Text className={styles.detailTitle}>📷 评价照片</Text>
+                  <View className={styles.detailPhotos}>
+                    {r.completionPhotos.map((p, i) => (
+                      <Image key={i} className={styles.detailPhotoImg} src={p} mode='aspectFill' />
+                    ))}
+                  </View>
                 </View>
               )}
               {r.tags && r.tags.length > 0 && (
@@ -279,17 +337,33 @@ const CreditPage: React.FC = () => {
     const expandKey = type + '_' + r.id;
     const isExpanded = expandedId === expandKey;
     const relatedBooking = bookings.find(b => b.id === r.bookingId);
-    const otherUser = type === 'my'
-      ? (relatedBooking?.publisherId === currentUser.id ? relatedBooking?.responder : relatedBooking?.publisher)
-      : null;
+    const reporterName = findReporterName(r.reporterId, relatedBooking);
+    const reporterInfo = findReporterInfo(r.reporterId, relatedBooking);
+    const reportedUser = r.reportedUser ||
+      (relatedBooking
+        ? relatedBooking.publisherId === r.reportedUserId
+          ? relatedBooking.publisher
+          : relatedBooking.responder
+        : null);
+
     const impact = getCreditImpact('report', r);
+    const appealStatus = getAppealStatus(r.id);
+    const canAppeal = type === 'received' && r.status === 'approved' && !hasAppeal(r.id);
+    const progressSteps = [
+      { key: 'created', label: '反馈提交', done: true, desc: r.createdAt },
+      { key: 'review', label: '平台审核', done: r.status !== 'pending' || false, desc: r.status === 'pending' ? '进行中...' : '已完成' },
+      { key: 'result', label: '处理结果', done: r.status !== 'pending', desc: r.status === 'approved' ? '扣减信用分 50 分' : r.status === 'rejected' ? '不成立，驳回' : '等待中' },
+    ];
 
     return (
       <View key={r.id} className={styles.reportItem}>
         <View className={styles.recordClickable} onClick={() => toggleExpand(expandKey)}>
           <View className={styles.reportHeader}>
             <Text className={styles.reportUser}>
-              {type === 'my' ? `被举报人：${r.reportedUser?.name || '匿名'}` : `举报人：${r.reporterId ? '邻居用户' : '匿名'}`}
+              {type === 'my'
+                ? `被举报：${reportedUser?.name || '匿名'}`
+                : `举报人：${reporterName}`
+              }
             </Text>
             <View className={styles.reportHeaderRight}>
               <Text className={`${styles.creditImpact} ${getCreditImpactClass(impact)}`}>
@@ -309,54 +383,149 @@ const CreditPage: React.FC = () => {
 
         {isExpanded && (
           <View className={styles.expandedDetail}>
-            {relatedBooking && (
-              <View className={styles.detailSection}>
-                <Text className={styles.detailTitle}>📋 关联预约</Text>
-                <View className={styles.detailRow}>
-                  <Text className={styles.detailLabel}>物品/服务</Text>
-                  <Text className={styles.detailValue}>{relatedBooking.item?.title || relatedBooking.service?.title || '未知'}</Text>
-                </View>
-                <View className={styles.detailRow}>
-                  <Text className={styles.detailLabel}>预约时间</Text>
-                  <Text className={styles.detailValue}>{relatedBooking.appointmentTime}</Text>
-                </View>
-                <View className={styles.detailRow}>
-                  <Text className={styles.detailLabel}>类型</Text>
-                  <Text className={styles.detailValue}>{relatedBooking.type === 'item' ? '物品交换' : '代办服务'}</Text>
-                </View>
-              </View>
-            )}
-            {type === 'my' && otherUser && (
-              <View className={styles.detailSection}>
-                <Text className={styles.detailTitle}>👤 对方信息</Text>
-                <View className={styles.detailUserRow}>
-                  <Image className={styles.detailAvatar} src={otherUser.avatar} mode='aspectFill' />
-                  <View className={styles.detailUserInfo}>
-                    <Text className={styles.detailUserName}>{otherUser.name}</Text>
-                    <Text className={styles.detailUserMeta}>{otherUser.building} {otherUser.unit} · 评分 {otherUser.rating.toFixed(1)}</Text>
-                  </View>
-                </View>
-              </View>
-            )}
             <View className={styles.detailSection}>
-              <Text className={styles.detailTitle}>📊 处理状态与信用影响</Text>
-              <View className={styles.detailRow}>
-                <Text className={styles.detailLabel}>处理状态</Text>
-                <Text className={`${styles.reportStatus} ${getReportStatusClass(r.status)}`}>
-                  {getReportStatusText(r.status)}
-                </Text>
-              </View>
-              <View className={styles.detailRow}>
-                <Text className={styles.detailLabel}>影响信用分</Text>
-                <Text className={`${styles.detailValue} ${getCreditImpactClass(impact)}`}>
-                  {impact}
-                </Text>
+              <Text className={styles.detailTitle}>📋 关联预约</Text>
+              {relatedBooking ? (
+                <>
+                  <View className={styles.detailRow}>
+                    <Text className={styles.detailLabel}>物品/服务</Text>
+                    <Text className={styles.detailValue}>{relatedBooking.item?.title || relatedBooking.service?.title || '未知'}</Text>
+                  </View>
+                  <View className={styles.detailRow}>
+                    <Text className={styles.detailLabel}>预约时间</Text>
+                    <Text className={styles.detailValue}>{relatedBooking.appointmentTime}</Text>
+                  </View>
+                  <View className={styles.detailRow}>
+                    <Text className={styles.detailLabel}>类型</Text>
+                    <Text className={styles.detailValue}>{relatedBooking.type === 'item' ? '物品交换' : '代办服务'}</Text>
+                  </View>
+                  <View className={styles.detailRow}>
+                    <Text className={styles.detailLabel}>预约状态</Text>
+                    <Text className={styles.detailValue}>{relatedBooking.status === 'completed' ? '已完成' : relatedBooking.status === 'confirmed' ? '已确认' : relatedBooking.status === 'pending' ? '待确认' : '已取消'}</Text>
+                  </View>
+                </>
+              ) : (
+                <Text className={styles.detailReview}>暂无关联预约信息</Text>
+              )}
+            </View>
+
+            <View className={styles.detailSection}>
+              <Text className={styles.detailTitle}>👥 双方身份</Text>
+              <View className={styles.detailParties}>
+                <View className={styles.partyCard}>
+                  <Text className={styles.partyTag}>举报人</Text>
+                  {reporterInfo ? (
+                    <View className={styles.detailUserRow}>
+                      <Image className={styles.detailAvatar} src={reporterInfo.avatar} mode='aspectFill' />
+                      <View className={styles.detailUserInfo}>
+                        <Text className={styles.detailUserName}>{reporterInfo.name}</Text>
+                        <Text className={styles.detailUserMeta}>{reporterInfo.building} {reporterInfo.unit}</Text>
+                      </View>
+                    </View>
+                  ) : (
+                    <Text className={styles.detailReview}>{reporterName}</Text>
+                  )}
+                </View>
+                <View className={styles.partyCard}>
+                  <Text className={styles.partyTag}>被举报人</Text>
+                  {reportedUser ? (
+                    <View className={styles.detailUserRow}>
+                      <Image className={styles.detailAvatar} src={reportedUser.avatar} mode='aspectFill' />
+                      <View className={styles.detailUserInfo}>
+                        <Text className={styles.detailUserName}>{reportedUser.name}</Text>
+                        <Text className={styles.detailUserMeta}>{reportedUser.building} {reportedUser.unit}</Text>
+                      </View>
+                    </View>
+                  ) : (
+                    <Text className={styles.detailReview}>{reportedUser?.name || '匿名'}</Text>
+                  )}
+                </View>
               </View>
             </View>
-            {r.description && (
+
+            <View className={styles.detailSection}>
+              <Text className={styles.detailTitle}>📊 处理进度</Text>
+              <View className={styles.progressTimeline}>
+                {progressSteps.map((step, idx) => (
+                  <View key={step.key} className={styles.progressStep}>
+                    <View className={styles.progressStepHeader}>
+                      <View className={`${styles.progressDot} ${step.done ? styles.done : ''}`} />
+                      <Text className={styles.progressLabel}>{step.label}</Text>
+                      <Text className={styles.progressDesc}>{step.desc}</Text>
+                    </View>
+                    {idx < progressSteps.length - 1 && (
+                      <View className={`${styles.progressLine} ${step.done ? styles.done : ''}`} />
+                    )}
+                  </View>
+                ))}
+              </View>
+            </View>
+
+            <View className={styles.detailSection}>
+              <Text className={styles.detailTitle}>� 处理结果</Text>
+              <View className={styles.resultCard}>
+                <View className={styles.resultRow}>
+                  <Text className={styles.resultLabel}>反馈原因</Text>
+                  <Text className={styles.resultValue}>{r.reason}</Text>
+                </View>
+                {r.description && (
+                  <View className={styles.resultRow}>
+                    <Text className={styles.resultLabel}>详细说明</Text>
+                    <Text className={styles.resultValue}>{r.description}</Text>
+                  </View>
+                )}
+                <View className={styles.resultRow}>
+                  <Text className={styles.resultLabel}>信用变化</Text>
+                  <Text className={`${styles.resultValue} ${getCreditImpactClass(impact)}`}>
+                    {impact}
+                  </Text>
+                </View>
+                <View className={styles.resultRow}>
+                  <Text className={styles.resultLabel}>处理状态</Text>
+                  <Text className={`${styles.reportStatus} ${getReportStatusClass(r.status)}`}>
+                    {getReportStatusText(r.status)}
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            {appealStatus && (
               <View className={styles.detailSection}>
-                <Text className={styles.detailTitle}>📝 详细说明</Text>
-                <Text className={styles.detailReview}>{r.description}</Text>
+                <Text className={styles.detailTitle}>⚖️ 申诉状态</Text>
+                <View className={styles.appealCard}>
+                  <Text className={`${styles.reportStatus} ${
+                    appealStatus === 'pending' ? styles.statusPending :
+                    appealStatus === 'approved' ? styles.statusApproved :
+                    appealStatus === 'rejected' ? styles.statusRejected : ''
+                  }`}>
+                    {appealStatus === 'pending' ? '申诉审核中' :
+                     appealStatus === 'approved' ? '申诉成功，已恢复信用分' :
+                     appealStatus === 'rejected' ? '申诉被驳回' : '处理中'}
+                  </Text>
+                </View>
+              </View>
+            )}
+
+            {canAppeal && (
+              <View className={styles.detailSection}>
+                <Button
+                  className={styles.appealBtn}
+                  onClick={() => handleGoToAppeal(r)}
+                >
+                  ⚖️ 对此结果发起信用申诉
+                </Button>
+                <Text className={styles.appealHint}>申诉期：处理结果公示后 7 天内有效</Text>
+              </View>
+            )}
+
+            {r.photos && r.photos.length > 0 && (
+              <View className={styles.detailSection}>
+                <Text className={styles.detailTitle}>� 证据照片</Text>
+                <View className={styles.detailPhotos}>
+                  {r.photos.map((p, i) => (
+                    <Image key={i} className={styles.detailPhotoImg} src={p} mode='aspectFill' />
+                  ))}
+                </View>
               </View>
             )}
           </View>
@@ -435,7 +604,7 @@ const CreditPage: React.FC = () => {
         <TabSegment
           tabs={tabs}
           activeIndex={activeTab}
-          onChange={(i) => { setActiveTab(i); setExpandedId(null); }}
+          onChange={(i) => { setActiveTab(i); setExpandedId(null); forceRefresh(); }}
         />
       </View>
 
@@ -445,27 +614,40 @@ const CreditPage: React.FC = () => {
         {activeTab === 2 && renderReceivedReports()}
       </View>
 
-      <View style={{ padding: '0 32rpx', display: 'flex', gap: 24, marginTop: 16 }}>
+      <View style={{ padding: '0 32rpx', display: 'flex', gap: 24, marginTop: 16, flexDirection: 'column' }}>
+        <View style={{ display: 'flex', gap: 24 }}>
+          <Button
+            style={{
+              flex: 1, height: 88, borderRadius: 12,
+              background: '#FF8A3D', color: '#fff',
+              fontSize: 28, fontWeight: 500
+            }}
+            onClick={handleGoToRate}
+          >
+            ⭐ 查看我的评价
+          </Button>
+          <Button
+            style={{
+              flex: 1, height: 88, borderRadius: 12,
+              background: '#fff', color: '#F53F3F',
+              fontSize: 28, fontWeight: 500,
+              boxShadow: '0 4rpx 12rpx rgba(0,0,0,0.06)'
+            }}
+            onClick={handleGoToReport}
+          >
+            ⚠️ 发起爽约反馈
+          </Button>
+        </View>
         <Button
           style={{
-            flex: 1, height: 88, borderRadius: 12,
-            background: '#FF8A3D', color: '#fff',
+            width: '100%', height: 88, borderRadius: 12,
+            background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+            color: '#fff',
             fontSize: 28, fontWeight: 500
           }}
-          onClick={handleGoToRate}
+          onClick={handleGoToAppealHistory}
         >
-          ⭐ 查看我的评价
-        </Button>
-        <Button
-          style={{
-            flex: 1, height: 88, borderRadius: 12,
-            background: '#fff', color: '#F53F3F',
-            fontSize: 28, fontWeight: 500,
-            boxShadow: '0 4rpx 12rpx rgba(0,0,0,0.06)'
-          }}
-          onClick={handleGoToReport}
-        >
-          ⚠️ 发起爽约反馈
+          ⚖️ 查看申诉记录
         </Button>
       </View>
     </ScrollView>

@@ -1,0 +1,326 @@
+@use '@/styles/variables.scss' as *;
+
+.appealPage {
+  min-height: 100vh;
+  background: $color-bg-page;
+  padding-bottom: 220rpx;
+}
+
+.pageHeader {
+  padding: $spacing-xl $page-padding;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: $color-text-white;
+}
+
+.pageTitle {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  display: block;
+}
+
+.pageSubtitle {
+  font-size: $font-size-sm;
+  opacity: 0.85;
+  margin-top: $spacing-xs;
+  display: block;
+}
+
+.sectionCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin: $spacing-md $page-padding;
+  box-shadow: $shadow-card;
+}
+
+.sectionTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+}
+
+.reportInfo {
+  padding: $spacing-md;
+  background: $color-bg-hover;
+  border-radius: $radius-md;
+  margin-bottom: $spacing-sm;
+}
+
+.infoRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: $spacing-md;
+  padding: 4rpx 0;
+}
+
+.infoLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  flex-shrink: 0;
+}
+
+.infoValue {
+  font-size: $font-size-xs;
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+  text-align: right;
+  flex: 1;
+  min-width: 0;
+}
+
+.warningBox {
+  background: rgba(245, 158, 11, 0.1);
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  margin: 0 $page-padding $spacing-md;
+  border: 2rpx solid rgba(245, 158, 11, 0.2);
+}
+
+.warningTitle {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: #d97706;
+  margin-bottom: $spacing-xs;
+}
+
+.warningText {
+  font-size: $font-size-xs;
+  color: #92400e;
+  line-height: 1.8;
+  white-space: pre-line;
+}
+
+.reasonSection {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-md;
+}
+
+.reasonOption {
+  @include button-reset;
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  padding: $spacing-md;
+  border-radius: $radius-md;
+  background: $color-bg-hover;
+  border: 2rpx solid transparent;
+  text-align: left;
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  min-width: auto;
+  line-height: 1.4;
+
+  &.active {
+    border-color: #6366f1;
+    background: rgba(99, 102, 241, 0.08);
+  }
+}
+
+.reasonRadio {
+  width: 32rpx;
+  height: 32rpx;
+  border-radius: $radius-round;
+  border: 3rpx solid $color-border;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: $color-bg-card;
+
+  &.active {
+    border-color: #6366f1;
+  }
+}
+
+.reasonCheck {
+  width: 18rpx;
+  height: 18rpx;
+  border-radius: $radius-round;
+  background: #6366f1;
+}
+
+.reasonText {
+  flex: 1;
+  min-width: 0;
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+}
+
+.textarea {
+  width: 100%;
+  min-height: 160rpx;
+  padding: $spacing-md;
+  background: $color-bg-hover;
+  border-radius: $radius-md;
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  line-height: 1.6;
+  box-sizing: border-box;
+}
+
+.charCount {
+  text-align: right;
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-top: $spacing-xs;
+}
+
+.photoSection {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-md;
+}
+
+.photoItem {
+  position: relative;
+  width: 180rpx;
+  height: 180rpx;
+}
+
+.photoImg {
+  width: 100%;
+  height: 100%;
+  border-radius: $radius-md;
+  object-fit: cover;
+}
+
+.removeBtn {
+  @include button-reset;
+  position: absolute;
+  top: -12rpx;
+  right: -12rpx;
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: $radius-round;
+  background: $color-error;
+  color: $color-text-white;
+  font-size: 28rpx;
+  line-height: 36rpx;
+  padding: 0;
+  min-width: auto;
+}
+
+.addPhotoBtn {
+  @include button-reset;
+  width: 180rpx;
+  height: 180rpx;
+  border-radius: $radius-md;
+  background: $color-bg-hover;
+  border: 2rpx dashed $color-border;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-xs;
+  font-size: 48rpx;
+  color: $color-text-tertiary;
+  min-width: auto;
+}
+
+.addPhotoText {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.bottomBar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  gap: $spacing-md;
+  padding: $spacing-md $page-padding;
+  padding-bottom: calc($spacing-md + env(safe-area-inset-bottom));
+  background: $color-bg-card;
+  box-shadow: 0 -4rpx 20rpx rgba(0, 0, 0, 0.06);
+}
+
+.cancelBtn {
+  @include button-reset;
+  flex: 1;
+  height: $button-height-lg;
+  border-radius: $radius-button;
+  background: $color-bg-hover;
+  color: $color-text-secondary;
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  min-width: auto;
+}
+
+.submitBtn {
+  @include button-reset;
+  flex: 2;
+  height: $button-height-lg;
+  border-radius: $radius-button;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: $color-text-white;
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  min-width: auto;
+
+  &[disabled] {
+    opacity: 0.5;
+  }
+}
+
+.historySection {
+  margin-top: $spacing-lg;
+}
+
+.historyItem {
+  padding: $spacing-md;
+  background: $color-bg-hover;
+  border-radius: $radius-md;
+  margin-bottom: $spacing-sm;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.historyHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-sm;
+}
+
+.historyStatus {
+  padding: 4rpx 16rpx;
+  border-radius: $radius-button;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+}
+
+.statusPending {
+  background: rgba(245, 158, 11, 0.1);
+  color: #d97706;
+}
+
+.statusApproved {
+  background: rgba(22, 163, 74, 0.1);
+  color: $color-success;
+}
+
+.statusRejected {
+  background: rgba(245, 63, 63, 0.1);
+  color: $color-error;
+}
+
+.historyReason {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  margin-bottom: 4rpx;
+}
+
+.historyDate {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
