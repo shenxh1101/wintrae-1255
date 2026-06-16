@@ -11,6 +11,7 @@ const CreditPage: React.FC = () => {
   const { bookings, currentUser } = useAppStore();
   const [timeRange, setTimeRange] = useState<'month' | 'all'>('all');
   const [activeTab, setActiveTab] = useState(0);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [receivedReports, setReceivedReports] = useState<any[]>([]);
   const [myReports, setMyReports] = useState<any[]>([]);
 
@@ -37,18 +38,27 @@ const CreditPage: React.FC = () => {
     return new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
   }, [timeRange]);
 
+  const isInRange = (dateStr: string) => {
+    if (!timeRangeStart) return true;
+    return new Date(dateStr) >= timeRangeStart;
+  };
+
   const myCompletedBookings = useMemo(() => {
     return bookings.filter(b =>
       b.status === 'completed' &&
       (b.publisherId === currentUser.id || b.responderId === currentUser.id)
-    ).filter(b => {
+    );
+  }, [bookings, currentUser.id]);
+
+  const filteredCompletedBookings = useMemo(() => {
+    return myCompletedBookings.filter(b => {
       if (!timeRangeStart || !b.completedAt) return true;
       return new Date(b.completedAt) >= timeRangeStart;
     });
-  }, [bookings, currentUser.id, timeRangeStart]);
+  }, [myCompletedBookings, timeRangeStart]);
 
   const receivedRatings = useMemo(() => {
-    return myCompletedBookings
+    return filteredCompletedBookings
       .filter(b => {
         const rating = b.publisherId === currentUser.id ? b.ratingFromResponder : b.ratingFromPublisher;
         return rating !== undefined;
@@ -58,28 +68,48 @@ const CreditPage: React.FC = () => {
         return {
           bookingId: b.id,
           fromUser: isPublisher ? b.responder : b.publisher,
+          fromRole: isPublisher ? '响应方' : '发布方',
           rating: isPublisher ? b.ratingFromResponder : b.ratingFromPublisher,
           review: isPublisher ? b.reviewFromResponder : b.reviewFromPublisher,
           tags: b.tags,
-          date: b.completedAt || b.createdAt
+          date: b.completedAt || b.createdAt,
+          booking
         };
       })
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  }, [myCompletedBookings, currentUser.id]);
+  }, [filteredCompletedBookings, currentUser.id]);
 
   const avgRating = useMemo(() => {
-    if (receivedRatings.length === 0) return currentUser.rating;
+    if (receivedRatings.length === 0) return 0;
     const sum = receivedRatings.reduce((acc, r) => acc + (r.rating || 0), 0);
     return Math.round((sum / receivedRatings.length) * 10) / 10;
-  }, [receivedRatings, currentUser.rating]);
+  }, [receivedRatings]);
+
+  const filteredExchangeCount = useMemo(() => {
+    return filteredCompletedBookings.length;
+  }, [filteredCompletedBookings]);
+
+  const myReportsFiltered = useMemo(() => {
+    if (!timeRangeStart) return myReports;
+    return myReports.filter(r => isInRange(r.createdAt));
+  }, [myReports, timeRangeStart]);
+
+  const receivedReportsFiltered = useMemo(() => {
+    if (!timeRangeStart) return receivedReports;
+    return receivedReports.filter(r => isInRange(r.createdAt));
+  }, [receivedReports, timeRangeStart]);
+
+  const approvedReceivedCount = useMemo(() => {
+    return receivedReportsFiltered.filter(r => r.status === 'approved').length;
+  }, [receivedReportsFiltered]);
 
   const creditScore = useMemo(() => {
     const base = 500;
-    const ratingBonus = Math.round(avgRating * 50);
-    const exchangeBonus = Math.min(currentUser.exchangeCount * 5, 200);
-    const reportDeduction = receivedReports.filter(r => r.status === 'approved').length * 50;
+    const ratingBonus = receivedRatings.length > 0 ? Math.round(avgRating * 50) : 0;
+    const exchangeBonus = Math.min(filteredExchangeCount * 5, 200);
+    const reportDeduction = approvedReceivedCount * 50;
     return Math.max(350, Math.min(950, base + ratingBonus + exchangeBonus - reportDeduction));
-  }, [avgRating, currentUser.exchangeCount, receivedReports]);
+  }, [avgRating, filteredExchangeCount, approvedReceivedCount, receivedRatings.length]);
 
   const creditLevel = useMemo(() => {
     if (creditScore >= 850) return '🌟 极好';
@@ -88,21 +118,6 @@ const CreditPage: React.FC = () => {
     if (creditScore >= 550) return '😊 一般';
     return '⚠️ 较低';
   }, [creditScore]);
-
-  const myReportsFiltered = useMemo(() => {
-    if (!timeRangeStart) return myReports;
-    return myReports.filter(r => new Date(r.createdAt) >= timeRangeStart);
-  }, [myReports, timeRangeStart]);
-
-  const receivedReportsFiltered = useMemo(() => {
-    if (!timeRangeStart) return receivedReports;
-    return receivedReports.filter(r => new Date(r.createdAt) >= timeRangeStart);
-  }, [receivedReports, timeRangeStart]);
-
-  const handleTimeChange = (range: 'month' | 'all') => {
-    setTimeRange(range);
-    console.log('[Credit] Time range changed:', range);
-  };
 
   const getReportStatusText = (status: string) => {
     switch (status) {
@@ -120,6 +135,25 @@ const CreditPage: React.FC = () => {
       case 'rejected': return styles.statusRejected;
       default: return '';
     }
+  };
+
+  const getCreditImpact = (type: 'rating' | 'report', data: any) => {
+    if (type === 'rating') {
+      return `+${Math.round((data.rating || 0) * 10)} 分`;
+    }
+    if (data.status === 'approved') return '-50 分';
+    if (data.status === 'pending') return '待定';
+    return '无影响';
+  };
+
+  const getCreditImpactClass = (impact: string) => {
+    if (impact.startsWith('+')) return styles.impactPositive;
+    if (impact.startsWith('-')) return styles.impactNegative;
+    return styles.impactPending;
+  };
+
+  const toggleExpand = (id: string) => {
+    setExpandedId(prev => prev === id ? null : id);
   };
 
   const handleGoToRate = () => {
@@ -140,39 +174,195 @@ const CreditPage: React.FC = () => {
       );
     }
 
-    return receivedRatings.map(r => (
-      <View key={r.bookingId} className={styles.recordItem}>
-        <View className={styles.recordHeader}>
-          <View className={styles.recordUser}>
-            <Image
-              className={styles.recordAvatar}
-              src={r.fromUser.avatar}
-              mode='aspectFill'
-            />
-            <View className={styles.recordUserInfo}>
-              <Text className={styles.recordUserName}>{r.fromUser.name}</Text>
-              <Text className={styles.recordUserRole}>
-                {r.fromUser.building} · {r.fromUser.unit}
+    return receivedRatings.map(r => {
+      const isExpanded = expandedId === ('rating_' + r.bookingId);
+      return (
+        <View key={r.bookingId} className={styles.recordItem}>
+          <View className={styles.recordClickable} onClick={() => toggleExpand('rating_' + r.bookingId)}>
+            <View className={styles.recordHeader}>
+              <View className={styles.recordUser}>
+                <Image
+                  className={styles.recordAvatar}
+                  src={r.fromUser.avatar}
+                  mode='aspectFill'
+                />
+                <View className={styles.recordUserInfo}>
+                  <Text className={styles.recordUserName}>{r.fromUser.name}</Text>
+                  <Text className={styles.recordUserRole}>
+                    {r.fromUser.building} · {r.fromRole}
+                  </Text>
+                </View>
+              </View>
+              <View className={styles.recordRight}>
+                <RatingStars rating={r.rating || 0} size={20} />
+                <Text className={`${styles.creditImpact} ${getCreditImpactClass(getCreditImpact('rating', r))}`}>
+                  {getCreditImpact('rating', r)}
+                </Text>
+              </View>
+            </View>
+            {r.review && (
+              <Text className={styles.recordContent} numberOfLines={isExpanded ? undefined : 1}>
+                "{r.review}"
+              </Text>
+            )}
+            <View className={styles.recordFooter}>
+              <Text className={styles.recordTime}>{formatDate(r.date)}</Text>
+              <Text className={styles.expandHint}>{isExpanded ? '收起 ▲' : '展开详情 ▼'}</Text>
+            </View>
+          </View>
+
+          {isExpanded && (
+            <View className={styles.expandedDetail}>
+              <View className={styles.detailSection}>
+                <Text className={styles.detailTitle}>📋 关联预约</Text>
+                <View className={styles.detailRow}>
+                  <Text className={styles.detailLabel}>物品/服务</Text>
+                  <Text className={styles.detailValue}>{r.booking.item?.title || r.booking.service?.title || '未知'}</Text>
+                </View>
+                <View className={styles.detailRow}>
+                  <Text className={styles.detailLabel}>预约时间</Text>
+                  <Text className={styles.detailValue}>{r.booking.appointmentTime}</Text>
+                </View>
+                <View className={styles.detailRow}>
+                  <Text className={styles.detailLabel}>完成时间</Text>
+                  <Text className={styles.detailValue}>{r.booking.completedAt ? formatDate(r.booking.completedAt) : '未知'}</Text>
+                </View>
+                <View className={styles.detailRow}>
+                  <Text className={styles.detailLabel}>类型</Text>
+                  <Text className={styles.detailValue}>{r.booking.type === 'item' ? '物品交换' : '代办服务'}</Text>
+                </View>
+              </View>
+              <View className={styles.detailSection}>
+                <Text className={styles.detailTitle}>👤 对方信息</Text>
+                <View className={styles.detailUserRow}>
+                  <Image className={styles.detailAvatar} src={r.fromUser.avatar} mode='aspectFill' />
+                  <View className={styles.detailUserInfo}>
+                    <Text className={styles.detailUserName}>{r.fromUser.name}</Text>
+                    <Text className={styles.detailUserMeta}>{r.fromUser.building} {r.fromUser.unit} · 评分 {r.fromUser.rating.toFixed(1)}</Text>
+                  </View>
+                </View>
+              </View>
+              <View className={styles.detailSection}>
+                <Text className={styles.detailTitle}>📊 信用影响</Text>
+                <View className={styles.detailRow}>
+                  <Text className={styles.detailLabel}>评价星级</Text>
+                  <Text className={styles.detailValue}>{r.rating} 星</Text>
+                </View>
+                <View className={styles.detailRow}>
+                  <Text className={styles.detailLabel}>影响信用分</Text>
+                  <Text className={`${styles.detailValue} ${getCreditImpactClass(getCreditImpact('rating', r))}`}>
+                    {getCreditImpact('rating', r)}
+                  </Text>
+                </View>
+              </View>
+              {r.review && (
+                <View className={styles.detailSection}>
+                  <Text className={styles.detailTitle}>� 评价内容</Text>
+                  <Text className={styles.detailReview}>{r.review}</Text>
+                </View>
+              )}
+              {r.tags && r.tags.length > 0 && (
+                <View className={styles.detailTags}>
+                  {r.tags.map(tag => (
+                    <Text key={tag} className={styles.detailTag}>{tag}</Text>
+                  ))}
+                </View>
+              )}
+            </View>
+          )}
+        </View>
+      );
+    });
+  };
+
+  const renderReportItem = (r: any, type: 'my' | 'received') => {
+    const expandKey = type + '_' + r.id;
+    const isExpanded = expandedId === expandKey;
+    const relatedBooking = bookings.find(b => b.id === r.bookingId);
+    const otherUser = type === 'my'
+      ? (relatedBooking?.publisherId === currentUser.id ? relatedBooking?.responder : relatedBooking?.publisher)
+      : null;
+    const impact = getCreditImpact('report', r);
+
+    return (
+      <View key={r.id} className={styles.reportItem}>
+        <View className={styles.recordClickable} onClick={() => toggleExpand(expandKey)}>
+          <View className={styles.reportHeader}>
+            <Text className={styles.reportUser}>
+              {type === 'my' ? `被举报人：${r.reportedUser?.name || '匿名'}` : `举报人：${r.reporterId ? '邻居用户' : '匿名'}`}
+            </Text>
+            <View className={styles.reportHeaderRight}>
+              <Text className={`${styles.creditImpact} ${getCreditImpactClass(impact)}`}>
+                {impact}
+              </Text>
+              <Text className={`${styles.reportStatus} ${getReportStatusClass(r.status)}`}>
+                {getReportStatusText(r.status)}
               </Text>
             </View>
           </View>
-          <View className={styles.recordScore}>
-            <RatingStars rating={r.rating || 0} size={20} />
+          <Text className={styles.reportReason}>原因：{r.reason}</Text>
+          <View className={styles.recordFooter}>
+            <Text className={styles.recordTime}>{formatDate(r.createdAt)}</Text>
+            <Text className={styles.expandHint}>{isExpanded ? '收起 ▲' : '展开详情 ▼'}</Text>
           </View>
         </View>
-        {r.review && (
-          <Text className={styles.recordContent}>"{r.review}"</Text>
-        )}
-        {r.tags && r.tags.length > 0 && (
-          <View className={styles.recordTags}>
-            {r.tags.map(tag => (
-              <Text key={tag} className={styles.recordTag}>{tag}</Text>
-            ))}
+
+        {isExpanded && (
+          <View className={styles.expandedDetail}>
+            {relatedBooking && (
+              <View className={styles.detailSection}>
+                <Text className={styles.detailTitle}>📋 关联预约</Text>
+                <View className={styles.detailRow}>
+                  <Text className={styles.detailLabel}>物品/服务</Text>
+                  <Text className={styles.detailValue}>{relatedBooking.item?.title || relatedBooking.service?.title || '未知'}</Text>
+                </View>
+                <View className={styles.detailRow}>
+                  <Text className={styles.detailLabel}>预约时间</Text>
+                  <Text className={styles.detailValue}>{relatedBooking.appointmentTime}</Text>
+                </View>
+                <View className={styles.detailRow}>
+                  <Text className={styles.detailLabel}>类型</Text>
+                  <Text className={styles.detailValue}>{relatedBooking.type === 'item' ? '物品交换' : '代办服务'}</Text>
+                </View>
+              </View>
+            )}
+            {type === 'my' && otherUser && (
+              <View className={styles.detailSection}>
+                <Text className={styles.detailTitle}>👤 对方信息</Text>
+                <View className={styles.detailUserRow}>
+                  <Image className={styles.detailAvatar} src={otherUser.avatar} mode='aspectFill' />
+                  <View className={styles.detailUserInfo}>
+                    <Text className={styles.detailUserName}>{otherUser.name}</Text>
+                    <Text className={styles.detailUserMeta}>{otherUser.building} {otherUser.unit} · 评分 {otherUser.rating.toFixed(1)}</Text>
+                  </View>
+                </View>
+              </View>
+            )}
+            <View className={styles.detailSection}>
+              <Text className={styles.detailTitle}>📊 处理状态与信用影响</Text>
+              <View className={styles.detailRow}>
+                <Text className={styles.detailLabel}>处理状态</Text>
+                <Text className={`${styles.reportStatus} ${getReportStatusClass(r.status)}`}>
+                  {getReportStatusText(r.status)}
+                </Text>
+              </View>
+              <View className={styles.detailRow}>
+                <Text className={styles.detailLabel}>影响信用分</Text>
+                <Text className={`${styles.detailValue} ${getCreditImpactClass(impact)}`}>
+                  {impact}
+                </Text>
+              </View>
+            </View>
+            {r.description && (
+              <View className={styles.detailSection}>
+                <Text className={styles.detailTitle}>📝 详细说明</Text>
+                <Text className={styles.detailReview}>{r.description}</Text>
+              </View>
+            )}
           </View>
         )}
-        <Text className={styles.recordTime}>{formatDate(r.date)}</Text>
       </View>
-    ));
+    );
   };
 
   const renderMyReports = () => {
@@ -184,22 +374,7 @@ const CreditPage: React.FC = () => {
         </View>
       );
     }
-
-    return myReportsFiltered.map(r => (
-      <View key={r.id} className={styles.reportItem}>
-        <View className={styles.reportHeader}>
-          <Text className={styles.reportUser}>被举报人：{r.reportedUser?.name || '匿名'}</Text>
-          <Text className={`${styles.reportStatus} ${getReportStatusClass(r.status)}`}>
-            {getReportStatusText(r.status)}
-          </Text>
-        </View>
-        <Text className={styles.reportReason}>原因：{r.reason}</Text>
-        {r.description && (
-          <Text className={styles.reportDesc}>{r.description}</Text>
-        )}
-        <Text className={styles.reportTime}>{formatDate(r.createdAt)}</Text>
-      </View>
-    ));
+    return myReportsFiltered.map(r => renderReportItem(r, 'my'));
   };
 
   const renderReceivedReports = () => {
@@ -211,29 +386,14 @@ const CreditPage: React.FC = () => {
         </View>
       );
     }
-
-    return receivedReportsFiltered.map(r => (
-      <View key={r.id} className={styles.reportItem}>
-        <View className={styles.reportHeader}>
-          <Text className={styles.reportUser}>举报人：{r.reporterId ? '邻居用户' : '匿名'}</Text>
-          <Text className={`${styles.reportStatus} ${getReportStatusClass(r.status)}`}>
-            {getReportStatusText(r.status)}
-          </Text>
-        </View>
-        <Text className={styles.reportReason}>原因：{r.reason}</Text>
-        {r.description && (
-          <Text className={styles.reportDesc}>{r.description}</Text>
-        )}
-        <Text className={styles.reportTime}>{formatDate(r.createdAt)}</Text>
-      </View>
-    ));
+    return receivedReportsFiltered.map(r => renderReportItem(r, 'received'));
   };
 
   return (
     <ScrollView scrollY className={styles.creditPage}>
       <View className={styles.header}>
         <Text className={styles.creditScore}>{creditScore}</Text>
-        <Text className={styles.creditLabel}>信用分</Text>
+        <Text className={styles.creditLabel}>信用分{timeRange === 'month' ? '（近一月）' : ''}</Text>
         <Text className={styles.creditLevel}>{creditLevel}</Text>
       </View>
 
@@ -251,7 +411,7 @@ const CreditPage: React.FC = () => {
           <Text className={styles.statLabel}>我收到的</Text>
         </View>
         <View className={styles.statItem}>
-          <Text className={styles.statNumber}>{avgRating.toFixed(1)}</Text>
+          <Text className={styles.statNumber}>{receivedRatings.length > 0 ? avgRating.toFixed(1) : '-'}</Text>
           <Text className={styles.statLabel}>平均评分</Text>
         </View>
       </View>
@@ -259,13 +419,13 @@ const CreditPage: React.FC = () => {
       <View className={styles.timeFilter}>
         <Button
           className={`${styles.timeBtn} ${timeRange === 'month' ? styles.active : ''}`}
-          onClick={() => handleTimeChange('month')}
+          onClick={() => { setTimeRange('month'); setExpandedId(null); }}
         >
           最近一个月
         </Button>
         <Button
           className={`${styles.timeBtn} ${timeRange === 'all' ? styles.active : ''}`}
-          onClick={() => handleTimeChange('all')}
+          onClick={() => { setTimeRange('all'); setExpandedId(null); }}
         >
           全部时间
         </Button>
@@ -275,10 +435,7 @@ const CreditPage: React.FC = () => {
         <TabSegment
           tabs={tabs}
           activeIndex={activeTab}
-          onChange={(i) => {
-            setActiveTab(i);
-            console.log('[Credit] Tab changed:', i);
-          }}
+          onChange={(i) => { setActiveTab(i); setExpandedId(null); }}
         />
       </View>
 
@@ -291,13 +448,9 @@ const CreditPage: React.FC = () => {
       <View style={{ padding: '0 32rpx', display: 'flex', gap: 24, marginTop: 16 }}>
         <Button
           style={{
-            flex: 1,
-            height: 88,
-            borderRadius: 12,
-            background: '#FF8A3D',
-            color: '#fff',
-            fontSize: 28,
-            fontWeight: 500
+            flex: 1, height: 88, borderRadius: 12,
+            background: '#FF8A3D', color: '#fff',
+            fontSize: 28, fontWeight: 500
           }}
           onClick={handleGoToRate}
         >
@@ -305,13 +458,9 @@ const CreditPage: React.FC = () => {
         </Button>
         <Button
           style={{
-            flex: 1,
-            height: 88,
-            borderRadius: 12,
-            background: '#fff',
-            color: '#F53F3F',
-            fontSize: 28,
-            fontWeight: 500,
+            flex: 1, height: 88, borderRadius: 12,
+            background: '#fff', color: '#F53F3F',
+            fontSize: 28, fontWeight: 500,
             boxShadow: '0 4rpx 12rpx rgba(0,0,0,0.06)'
           }}
           onClick={handleGoToReport}

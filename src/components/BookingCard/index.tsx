@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, Image, Button } from '@tarojs/components';
 import classnames from 'classnames';
+import Taro from '@tarojs/taro';
 import { Booking } from '@/types';
 import { getBookingStatusText, getBookingStatusColor, formatDate } from '@/utils';
 import RatingStars from '@/components/RatingStars';
@@ -39,20 +40,23 @@ const BookingCard: React.FC<BookingCardProps> = ({
     (!isPublisher && !booking.responderConfirmed)
   );
 
-  const needMyCompleteConfirm = booking.needBothConfirm && (
-    (isPublisher && !booking.publisherCompleted) ||
-    (!isPublisher && !booking.responderCompleted)
-  );
-
   const showConfirmBtn = booking.status === 'pending' && needMyBookingConfirm;
-  const showPublisherCompleteBtn = (booking.status === 'confirmed' || booking.status === 'in_progress') && isPublisher;
+  const showPublisherCompleteBtn = (booking.status === 'confirmed' || booking.status === 'in_progress') && isPublisher && !booking.publisherCompleted;
   const showResponderConfirmBtn = booking.needBothConfirm && booking.publisherCompleted && !booking.responderCompleted && !isPublisher;
+  const showWaitingResponder = booking.needBothConfirm && isPublisher && booking.publisherCompleted && !booking.responderCompleted && booking.status !== 'completed';
   const showRateBtn = booking.status === 'completed' && !(isPublisher ? booking.ratingFromPublisher : booking.ratingFromResponder);
   const showCancelBtn = booking.status === 'pending' && isPublisher;
   const showReportBtn = booking.status === 'completed' && !booking.hasReport;
 
   const myRating = isPublisher ? booking.ratingFromPublisher : booking.ratingFromResponder;
   const otherRating = isPublisher ? booking.ratingFromResponder : booking.ratingFromPublisher;
+  const hasAnyRating = booking.ratingFromPublisher !== undefined || booking.ratingFromResponder !== undefined;
+
+  const handleReviewDetail = () => {
+    Taro.navigateTo({
+      url: '/pages/ranking/index?id=' + booking.id + '&mode=view'
+    });
+  };
 
   return (
     <View className={styles.bookingCard} onClick={onClick}>
@@ -102,7 +106,7 @@ const BookingCard: React.FC<BookingCardProps> = ({
             </View>
           )}
 
-          {booking.needBothConfirm && (booking.status === 'in_progress' || (booking.publisherCompleted && !booking.responderCompleted)) && (
+          {booking.needBothConfirm && (booking.status === 'in_progress' || booking.publisherCompleted || booking.responderCompleted) && booking.status !== 'completed' && (
             <View className={styles.confirmStatus}>
               <View className={classnames(styles.confirmItem, {
                 [styles.confirmed]: booking.publisherCompleted,
@@ -157,27 +161,41 @@ const BookingCard: React.FC<BookingCardProps> = ({
         </View>
       </View>
 
-      {booking.status === 'completed' && booking.rating !== undefined && (
-        <View className={styles.ratingSummary}>
-          <View className={styles.ratingHeader}>
-            <Text className={styles.ratingLabel}>⭐ 综合评价</Text>
-            <RatingStars rating={booking.rating} size={20} />
-            <Text className={styles.ratingScore}>{booking.rating}.0</Text>
+      {booking.status === 'completed' && hasAnyRating && (
+        <View className={styles.ratingSummary} onClick={(e) => { e.stopPropagation(); handleReviewDetail(); }}>
+          <View className={styles.ratingSummaryHeader}>
+            <Text className={styles.ratingLabel}>⭐ 双方评价</Text>
+            <Text className={styles.viewDetailHint}>查看详情 ›</Text>
           </View>
-          {booking.review && (
-            <Text className={styles.ratingReview}>"{booking.review}"</Text>
+          {booking.ratingFromPublisher !== undefined && (
+            <View className={styles.ratingPartyRow}>
+              <Text className={styles.ratingPartyLabel}>发布方</Text>
+              <RatingStars rating={booking.ratingFromPublisher} size={16} />
+              <Text className={styles.ratingPartyScore}>{booking.ratingFromPublisher}.0</Text>
+              {booking.reviewFromPublisher && (
+                <Text className={styles.ratingPartyReview} numberOfLines={1}>"{booking.reviewFromPublisher}"</Text>
+              )}
+            </View>
           )}
-          {booking.tags && booking.tags.length > 0 && (
-            <View className={styles.ratingTags}>
-              {booking.tags.map(tag => (
-                <Text key={tag} className={styles.ratingTag}>{tag}</Text>
-              ))}
+          {booking.ratingFromResponder !== undefined && (
+            <View className={styles.ratingPartyRow}>
+              <Text className={styles.ratingPartyLabel}>响应方</Text>
+              <RatingStars rating={booking.ratingFromResponder} size={16} />
+              <Text className={styles.ratingPartyScore}>{booking.ratingFromResponder}.0</Text>
+              {booking.reviewFromResponder && (
+                <Text className={styles.ratingPartyReview} numberOfLines={1}>"{booking.reviewFromResponder}"</Text>
+              )}
+            </View>
+          )}
+          {booking.completionPhotos && booking.completionPhotos.length > 0 && (
+            <View className={styles.ratingPhotoHint}>
+              <Text className={styles.ratingPhotoText}>📷 {booking.completionPhotos.length} 张照片</Text>
             </View>
           )}
         </View>
       )}
 
-      {booking.status === 'completed' && !booking.rating && !myRating && (
+      {booking.status === 'completed' && !hasAnyRating && !myRating && (
         <View className={styles.rateHint}>
           <Text className={styles.rateHintText}>
             💡 服务已完成，快来给{otherUser.name}打个分吧~
@@ -206,12 +224,17 @@ const BookingCard: React.FC<BookingCardProps> = ({
             确认完成
           </Button>
         )}
+        {showWaitingResponder && (
+          <View className={styles.waitingConfirm}>
+            <Text className={styles.waitingText}>⏳ 等待对方确认完成</Text>
+          </View>
+        )}
         {showRateBtn && (
           <Button className={classnames(styles.actionBtn, styles.primary)} onClick={onRate}>
             去评价
           </Button>
         )}
-        {myRating !== undefined && booking.status === 'completed' && (
+        {myRating !== undefined && booking.status === 'completed' && !showRateBtn && (
           <View className={styles.ratedBadge}>
             <Text>⭐ 我已评价 {myRating} 分</Text>
           </View>

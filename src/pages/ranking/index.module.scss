@@ -355,3 +355,69 @@
   line-height: 1.6;
   margin-top: $spacing-xs;
 }
+
+.reviewPartyHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-sm;
+}
+
+.reviewPartyUser {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  flex: 1;
+  min-width: 0;
+}
+
+.reviewAvatar {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: $radius-round;
+  flex-shrink: 0;
+}
+
+.reviewUserInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.reviewUserName {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  @include text-ellipsis;
+}
+
+.reviewUserRole {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.reviewRatingRight {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+  flex-shrink: 0;
+}
+
+.reviewScore {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-primary;
+}
+
+.reviewContent {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  line-height: 1.6;
+  margin-bottom: $spacing-xs;
+  padding-left: 80rpx;
+}
+
+.reviewTime {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  padding-left: 80rpx;
+}

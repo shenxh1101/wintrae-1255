@@ -54,7 +54,8 @@ export const getMessageTypeColor = (type: MessageType): string => {
   const map = {
     system: '#165DFF',
     booking: '#FF8A3D',
-    chat: '#52C41A'
+    chat: '#52C41A',
+    credit: '#FFC107'
   };
   return map[type];
 };

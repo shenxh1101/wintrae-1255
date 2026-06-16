@@ -3,7 +3,7 @@ import { View, Text, Image, ScrollView, Button, Textarea } from '@tarojs/compone
 import Taro from '@tarojs/taro';
 import { useAppStore } from '@/store/useAppStore';
 import RatingStars from '@/components/RatingStars';
-import { showToast, showModal } from '@/utils';
+import { formatDate, showToast, showModal } from '@/utils';
 import styles from './index.module.scss';
 
 const RatingPage: React.FC = () => {
@@ -21,7 +21,6 @@ const RatingPage: React.FC = () => {
     const params = Taro.getCurrentInstance().router?.params || {};
     setBookingId(params.id as string || '');
     setMode((params.mode as 'submit' | 'view') || 'submit');
-    console.log('[Rating] Page params:', params);
   }, []);
 
   const booking = useMemo(() =>
@@ -51,7 +50,6 @@ const RatingPage: React.FC = () => {
   const handleStarClick = (star: number) => {
     if (mode === 'view') return;
     setRating(star);
-    console.log('[Rating] Selected rating:', star);
   };
 
   const toggleTag = (tag: string) => {
@@ -76,7 +74,6 @@ const RatingPage: React.FC = () => {
         sizeType: ['compressed']
       });
       setPhotos(prev => [...prev, ...res.tempFilePaths]);
-      console.log('[Rating] Photos added:', res.tempFilePaths.length);
     } catch (error) {
       console.error('[Rating] Choose image error:', error);
     }
@@ -109,7 +106,6 @@ const RatingPage: React.FC = () => {
           tags: selectedTags
         });
 
-        console.log('[Rating] Submitted:', { rating, comment, tags: selectedTags, photos });
         showToast('评价成功', 'success');
 
         setTimeout(() => {
@@ -127,6 +123,116 @@ const RatingPage: React.FC = () => {
   };
 
   if (mode === 'view') {
+    if (bookingId && booking) {
+      const publisherRating = booking.ratingFromPublisher;
+      const responderRating = booking.ratingFromResponder;
+      const hasAnyRating = publisherRating !== undefined || responderRating !== undefined;
+
+      return (
+        <ScrollView scrollY className={styles.ratingPage}>
+          <View className={styles.pageHeader}>
+            <Text className={styles.pageTitle}>⭐ 评价详情</Text>
+            <Text className={styles.pageSubtitle}>{booking.item?.title || booking.service?.title || ''}</Text>
+          </View>
+
+          <View className={styles.bookingInfo}>
+            <View className={styles.infoRow}>
+              <Text className={styles.infoLabel}>预约时间</Text>
+              <Text className={styles.infoValue}>{booking.appointmentTime}</Text>
+            </View>
+            <View className={styles.infoRow}>
+              <Text className={styles.infoLabel}>完成时间</Text>
+              <Text className={styles.infoValue}>{booking.completedAt ? formatDate(booking.completedAt) : '未知'}</Text>
+            </View>
+            <View className={styles.infoRow}>
+              <Text className={styles.infoLabel}>类型</Text>
+              <Text className={styles.infoValue}>{booking.type === 'item' ? '物品交换' : '代办服务'}</Text>
+            </View>
+          </View>
+
+          {!hasAnyRating && (
+            <View className={styles.sectionCard} style={{ textAlign: 'center', padding: 60 }}>
+              <Text style={{ fontSize: 48, marginBottom: 16 }}>⭐</Text>
+              <Text style={{ fontSize: 28, color: '#999' }}>暂无评价</Text>
+            </View>
+          )}
+
+          {publisherRating !== undefined && (
+            <View className={styles.sectionCard}>
+              <View className={styles.reviewPartyHeader}>
+                <View className={styles.reviewPartyUser}>
+                  <Image className={styles.reviewAvatar} src={booking.publisher.avatar} mode='aspectFill' />
+                  <View className={styles.reviewUserInfo}>
+                    <Text className={styles.reviewUserName}>{booking.publisher.name}</Text>
+                    <Text className={styles.reviewUserRole}>发布方</Text>
+                  </View>
+                </View>
+                <View className={styles.reviewRatingRight}>
+                  <RatingStars rating={publisherRating} size={24} />
+                  <Text className={styles.reviewScore}>{publisherRating}.0</Text>
+                </View>
+              </View>
+              {booking.reviewFromPublisher && (
+                <Text className={styles.reviewContent}>"{booking.reviewFromPublisher}"</Text>
+              )}
+              <Text className={styles.reviewTime}>评价时间：{booking.completedAt ? formatDate(booking.completedAt) : '近期'}</Text>
+            </View>
+          )}
+
+          {responderRating !== undefined && (
+            <View className={styles.sectionCard}>
+              <View className={styles.reviewPartyHeader}>
+                <View className={styles.reviewPartyUser}>
+                  <Image className={styles.reviewAvatar} src={booking.responder.avatar} mode='aspectFill' />
+                  <View className={styles.reviewUserInfo}>
+                    <Text className={styles.reviewUserName}>{booking.responder.name}</Text>
+                    <Text className={styles.reviewUserRole}>响应方</Text>
+                  </View>
+                </View>
+                <View className={styles.reviewRatingRight}>
+                  <RatingStars rating={responderRating} size={24} />
+                  <Text className={styles.reviewScore}>{responderRating}.0</Text>
+                </View>
+              </View>
+              {booking.reviewFromResponder && (
+                <Text className={styles.reviewContent}>"{booking.reviewFromResponder}"</Text>
+              )}
+              <Text className={styles.reviewTime}>评价时间：{booking.completedAt ? formatDate(booking.completedAt) : '近期'}</Text>
+            </View>
+          )}
+
+          {booking.completionPhotos && booking.completionPhotos.length > 0 && (
+            <View className={styles.sectionCard}>
+              <Text className={styles.sectionTitle}>📷 评价照片</Text>
+              <View className={styles.photoSection}>
+                {booking.completionPhotos.map((photo, index) => (
+                  <Image
+                    key={index}
+                    className={styles.photoImg}
+                    src={photo}
+                    mode='aspectFill'
+                  />
+                ))}
+              </View>
+            </View>
+          )}
+
+          {booking.tags && booking.tags.length > 0 && (
+            <View className={styles.sectionCard}>
+              <Text className={styles.sectionTitle}>🏷️ 评价标签</Text>
+              <View className={styles.tagsSection}>
+                {booking.tags.map(tag => (
+                  <Text key={tag} className={`${styles.tagBtn} ${styles.active}`}>{tag}</Text>
+                ))}
+              </View>
+            </View>
+          )}
+
+          <View style={{ height: 40 }} />
+        </ScrollView>
+      );
+    }
+
     const myRatings = bookings
       .filter(b =>
         b.rating &&
@@ -169,40 +275,61 @@ const RatingPage: React.FC = () => {
                 <Text style={{ fontSize: 28, color: '#999' }}>暂无评价记录</Text>
               </View>
             ) : (
-              myRatings.map((b) => (
-                <View key={b.id} className={styles.ratingItem}>
-                  <View className={styles.ratingHeader}>
-                    <Text className={styles.ratingFrom}>
-                      {(b.publisherId === currentUser.id ? b.responder?.name : b.publisher?.name) || '匿名用户'}
-                    </Text>
-                    <RatingStars rating={b.rating || 0} size={24} />
-                  </View>
-                  <Text className={styles.ratingDate}>
-                    {b.completedAt ? new Date(b.completedAt).toLocaleDateString() : '近期'}
-                  </Text>
-                  {b.tags && b.tags.length > 0 && (
-                    <View style={{ display: 'flex', gap: 12, marginTop: 12, flexWrap: 'wrap' }}>
-                      {b.tags.map(tag => (
-                        <Text
-                          key={tag}
-                          style={{
-                            padding: '4rpx 16rpx',
-                            background: 'rgba(255, 138, 61, 0.1)',
-                            color: '#FF8A3D',
-                            borderRadius: 24,
-                            fontSize: 22
-                          }}
-                        >
-                          {tag}
-                        </Text>
-                      ))}
+              myRatings.map((b) => {
+                const hasBothRatings = b.ratingFromPublisher !== undefined && b.ratingFromResponder !== undefined;
+                return (
+                  <View key={b.id} className={styles.ratingItem}>
+                    <View className={styles.ratingHeader}>
+                      <Text className={styles.ratingFrom}>
+                        {(b.publisherId === currentUser.id ? b.responder?.name : b.publisher?.name) || '匿名用户'}
+                      </Text>
+                      <RatingStars rating={b.rating || 0} size={24} />
                     </View>
-                  )}
-                  {b.review && (
-                    <Text className={styles.ratingComment}>{b.review}</Text>
-                  )}
-                </View>
-              ))
+                    <Text className={styles.ratingDate}>
+                      {b.completedAt ? new Date(b.completedAt).toLocaleDateString() : '近期'}
+                    </Text>
+                    {hasBothRatings && (
+                      <View style={{ display: 'flex', gap: 16, marginTop: 8, fontSize: 22, color: '#999' }}>
+                        <Text>发布方: {b.ratingFromPublisher}分</Text>
+                        <Text>响应方: {b.ratingFromResponder}分</Text>
+                      </View>
+                    )}
+                    {b.tags && b.tags.length > 0 && (
+                      <View style={{ display: 'flex', gap: 12, marginTop: 12, flexWrap: 'wrap' }}>
+                        {b.tags.map(tag => (
+                          <Text
+                            key={tag}
+                            style={{
+                              padding: '4rpx 16rpx',
+                              background: 'rgba(255, 138, 61, 0.1)',
+                              color: '#FF8A3D',
+                              borderRadius: 24,
+                              fontSize: 22
+                            }}
+                          >
+                            {tag}
+                          </Text>
+                        ))}
+                      </View>
+                    )}
+                    {b.review && (
+                      <Text className={styles.ratingComment}>{b.review}</Text>
+                    )}
+                    {b.completionPhotos && b.completionPhotos.length > 0 && (
+                      <View style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                        {b.completionPhotos.map((photo, idx) => (
+                          <Image
+                            key={idx}
+                            style={{ width: 120, height: 120, borderRadius: 8 }}
+                            src={photo}
+                            mode='aspectFill'
+                          />
+                        ))}
+                      </View>
+                    )}
+                  </View>
+                );
+              })
             )}
           </View>
         </View>

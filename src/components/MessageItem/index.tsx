@@ -15,7 +15,8 @@ const MessageItem: React.FC<MessageItemProps> = ({ message, onClick, unreadCount
   const iconMap: Record<string, string> = {
     system: '🔔',
     booking: '📋',
-    chat: '💬'
+    chat: '💬',
+    credit: '💳'
   };
 
   const bgColor = getMessageTypeColor(message.type);

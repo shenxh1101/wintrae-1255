@@ -3,7 +3,7 @@ export type ServiceType = 'errand' | 'helper';
 export type PublishType = 'item' | 'service';
 export type DeliveryType = 'pickup' | 'delivery' | 'both';
 export type BookingStatus = 'pending' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled';
-export type MessageType = 'system' | 'booking' | 'chat';
+export type MessageType = 'system' | 'booking' | 'chat' | 'credit';
 
 export interface User {
   id: string;

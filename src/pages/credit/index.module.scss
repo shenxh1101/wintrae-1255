@@ -148,6 +148,10 @@
   }
 }
 
+.recordClickable {
+  cursor: pointer;
+}
+
 .recordHeader {
   display: flex;
   justify-content: space-between;
@@ -187,18 +191,35 @@
   color: $color-text-tertiary;
 }
 
-.recordScore {
+.recordRight {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-end;
   gap: 4rpx;
   flex-shrink: 0;
   margin-left: $spacing-sm;
 }
 
-.recordScoreText {
-  font-size: $font-size-sm;
+.creditImpact {
+  font-size: $font-size-xs;
   font-weight: $font-weight-semibold;
-  color: $color-primary;
+  padding: 2rpx 12rpx;
+  border-radius: $radius-sm;
+}
+
+.impactPositive {
+  color: $color-success;
+  background: rgba(22, 163, 74, 0.1);
+}
+
+.impactNegative {
+  color: $color-error;
+  background: rgba(245, 63, 63, 0.1);
+}
+
+.impactPending {
+  color: #d97706;
+  background: rgba(245, 158, 11, 0.1);
 }
 
 .recordContent {
@@ -206,6 +227,119 @@
   color: $color-text-secondary;
   line-height: 1.6;
   margin-left: 80rpx;
+}
+
+.recordFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: $spacing-xs;
+  margin-left: 80rpx;
+}
+
+.recordTime {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.expandHint {
+  font-size: $font-size-xs;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+}
+
+.expandedDetail {
+  margin-top: $spacing-md;
+  margin-left: 0;
+  padding: $spacing-md;
+  background: $color-bg-hover;
+  border-radius: $radius-md;
+}
+
+.detailSection {
+  margin-bottom: $spacing-md;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.detailTitle {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-sm;
+}
+
+.detailRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6rpx 0;
+}
+
+.detailLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  flex-shrink: 0;
+  margin-right: $spacing-md;
+}
+
+.detailValue {
+  font-size: $font-size-xs;
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+  text-align: right;
+  flex: 1;
+}
+
+.detailUserRow {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.detailAvatar {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: $radius-round;
+  flex-shrink: 0;
+}
+
+.detailUserInfo {
+  flex: 1;
+}
+
+.detailUserName {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+}
+
+.detailUserMeta {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.detailReview {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  line-height: 1.6;
+}
+
+.detailTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-xs;
+  margin-top: $spacing-xs;
+}
+
+.detailTag {
+  padding: 4rpx 16rpx;
+  background: rgba(255, 138, 61, 0.12);
+  color: $color-primary;
+  border-radius: $radius-button;
+  font-size: $font-size-xs;
 }
 
 .recordTags {
@@ -223,12 +357,6 @@
   font-size: $font-size-xs;
 }
 
-.recordTime {
-  font-size: $font-size-xs;
-  color: $color-text-tertiary;
-  margin: $spacing-xs 0 0 80rpx;
-}
-
 .reportItem {
   padding: $spacing-md 0;
   border-bottom: 2rpx solid $color-divider;
@@ -243,6 +371,12 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: $spacing-xs;
+}
+
+.reportHeaderRight {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
 }
 
 .reportUser {
@@ -283,11 +417,6 @@
   color: $color-text-tertiary;
   line-height: 1.6;
   margin-bottom: $spacing-xs;
-}
-
-.reportTime {
-  font-size: $font-size-xs;
-  color: $color-text-tertiary;
 }
 
 .emptyState {

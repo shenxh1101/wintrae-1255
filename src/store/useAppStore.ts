@@ -27,6 +27,7 @@ interface AppState {
   addBooking: (booking: Omit<Booking, 'id' | 'createdAt' | 'completionPhotos' | 'publisherConfirmed' | 'responderConfirmed'>) => string;
   updateBooking: (bookingId: string, updates: Partial<Booking>) => void;
   markMessageRead: (messageId: string) => void;
+  addMessage: (message: Omit<Message, 'id' | 'isRead' | 'createdAt'>) => void;
   confirmBooking: (bookingId: string, isPublisher: boolean) => void;
   completeBooking: (bookingId: string, data: { photos?: string[]; rating?: number; review?: string; tags?: string[] }) => void;
   publisherCompleteBooking: (bookingId: string, photos?: string[]) => boolean;
@@ -133,6 +134,20 @@ export const useAppStore = create<AppState>((set, get) => ({
     unreadCount: state.unreadCount - 1
   })),
 
+  addMessage: (messageInput) => {
+    const id = 'm' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    const newMessage: Message = {
+      ...messageInput,
+      id,
+      isRead: false,
+      createdAt: new Date().toISOString()
+    };
+    set((state) => ({
+      messages: [newMessage, ...state.messages],
+      unreadCount: state.unreadCount + 1
+    }));
+  },
+
   confirmBooking: (bookingId, isPublisher) => {
     const state = get();
     const booking = state.bookings.find(b => b.id === bookingId);
@@ -204,6 +219,18 @@ export const useAppStore = create<AppState>((set, get) => ({
       updates.status = 'completed';
       updates.completedAt = new Date().toISOString();
       isCompleted = true;
+
+      const title = booking.item?.title || booking.service?.title || '服务';
+      get().addMessage({
+        type: 'credit',
+        title: '对方已确认完成',
+        content: `${booking.responder.name} 已确认「${title}」完成，快去评价吧！`,
+        relatedId: bookingId,
+        senderId: booking.responderId,
+        sender: booking.responder,
+        receiverId: booking.publisherId,
+        receiver: booking.publisher
+      });
     }
 
     set({
@@ -261,6 +288,22 @@ export const useAppStore = create<AppState>((set, get) => ({
         b.id === bookingId ? { ...b, ...updates } : b
       )
     });
+
+    if (data.rating !== undefined && booking) {
+      const rater = isPublisher ? booking.publisher : booking.responder;
+      const ratee = isPublisher ? booking.responder : booking.publisher;
+      const title = booking.item?.title || booking.service?.title || '服务';
+      get().addMessage({
+        type: 'credit',
+        title: '收到新评价',
+        content: `${rater.name} 对「${title}」给出了 ${data.rating} 星评价`,
+        relatedId: bookingId,
+        senderId: state.currentUser.id,
+        sender: state.currentUser,
+        receiverId: isPublisher ? booking.responderId : booking.publisherId,
+        receiver: ratee
+      });
+    }
 
     console.log('[Store] Complete booking with rating:', bookingId, 'isPublisher:', isPublisher);
   }

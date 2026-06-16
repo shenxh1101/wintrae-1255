@@ -12,7 +12,7 @@ const MessagePage: React.FC = () => {
   const { messages, unreadCount, currentUser, markMessageRead } = useAppStore();
   const [activeTab, setActiveTab] = useState(0);
 
-  const tabs = ['全部消息', '系统通知', '预约通知', '聊天消息'];
+  const tabs = ['全部消息', '系统通知', '预约通知', '信用提醒', '聊天消息'];
 
   const filteredMessages = useMemo(() => {
     let result = messages.filter(m =>
@@ -24,6 +24,8 @@ const MessagePage: React.FC = () => {
     } else if (activeTab === 2) {
       result = result.filter(m => m.type === 'booking');
     } else if (activeTab === 3) {
+      result = result.filter(m => m.type === 'credit');
+    } else if (activeTab === 4) {
       result = result.filter(m => m.type === 'chat');
     }
 
@@ -42,6 +44,14 @@ const MessagePage: React.FC = () => {
     if (message.relatedId) {
       if (message.type === 'booking') {
         Taro.switchTab({ url: '/pages/booking/index' });
+      } else if (message.type === 'credit') {
+        if (message.title === '收到新评价') {
+          Taro.navigateTo({ url: '/pages/ranking/index?id=' + message.relatedId + '&mode=view' });
+        } else if (message.title === '对方已确认完成') {
+          Taro.navigateTo({ url: '/pages/ranking/index?id=' + message.relatedId + '&mode=submit' });
+        } else {
+          Taro.navigateTo({ url: '/pages/credit/index' });
+        }
       } else if (message.type === 'chat') {
         showToast('聊天功能开发中');
       }
@@ -147,6 +157,23 @@ const MessagePage: React.FC = () => {
             <Text className={styles.actionName}>预约通知</Text>
             <Text className={styles.actionDesc}>
               {getUnreadByType('booking') > 0 ? `${getUnreadByType('booking')} 条未读` : '暂无新消息'}
+            </Text>
+          </View>
+        </Button>
+        <Button
+          className={styles.actionCard}
+          onClick={() => {
+            setActiveTab(3);
+            console.log('[Message] Credit messages');
+          }}
+        >
+          <View className={styles.actionIcon} style={{ background: 'rgba(255, 193, 7, 0.1)' }}>
+            💳
+          </View>
+          <View className={styles.actionText}>
+            <Text className={styles.actionName}>信用提醒</Text>
+            <Text className={styles.actionDesc}>
+              {getUnreadByType('credit') > 0 ? `${getUnreadByType('credit')} 条未读` : '暂无新消息'}
             </Text>
           </View>
         </Button>

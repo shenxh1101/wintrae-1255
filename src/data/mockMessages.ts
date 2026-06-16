@@ -117,6 +117,45 @@ export const mockMessages: Message[] = [
     receiver: mockUsers[3],
     isRead: true,
     createdAt: '2026-06-15 09:00'
+  },
+  {
+    id: 'm011',
+    type: 'credit',
+    title: '对方已确认完成',
+    content: '赵奶奶 已确认「保洁阿姨帮忙打扫卫生」完成，快去评价吧！',
+    relatedId: 'b006',
+    senderId: 'u006',
+    sender: mockUsers[5],
+    receiverId: 'u001',
+    receiver: mockCurrentUser,
+    isRead: false,
+    createdAt: '2026-06-15 12:30'
+  },
+  {
+    id: 'm012',
+    type: 'credit',
+    title: '收到新评价',
+    content: '李阿姨 对「Switch健身环+游戏卡带」给出了 5 星评价',
+    relatedId: 'b005',
+    senderId: 'u002',
+    sender: mockUsers[1],
+    receiverId: 'u001',
+    receiver: mockCurrentUser,
+    isRead: false,
+    createdAt: '2026-06-15 22:30'
+  },
+  {
+    id: 'm013',
+    type: 'credit',
+    title: '爽约反馈已处理',
+    content: '您发起的爽约反馈已处理完毕，对方信用分已扣除。',
+    relatedId: 'b008',
+    senderId: 'u007',
+    sender: mockUsers[6],
+    receiverId: 'u001',
+    receiver: mockCurrentUser,
+    isRead: true,
+    createdAt: '2026-06-14 10:00'
   }
 ];
 
